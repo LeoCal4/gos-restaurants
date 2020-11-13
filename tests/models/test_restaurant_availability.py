@@ -5,7 +5,6 @@ from faker import Faker
 from .model_test import ModelTest
 
 
-
 class TestRestaurantAvailability(ModelTest):
     faker = Faker()
     week_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday','Sunday']

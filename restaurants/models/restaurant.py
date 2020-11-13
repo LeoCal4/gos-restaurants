@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from geopy.geocoders import Nominatim
 from restaurants import db
@@ -49,7 +49,6 @@ class Restaurant(db.Model):
     )
     owner_id = db.Column(
         db.Integer,
-        db.ForeignKey('Operator.id'),
     )
     avg_stay = db.Column(
         db.Integer,
@@ -142,10 +141,9 @@ class Restaurant(db.Model):
     def set_avg_stay(self, avg_stay):
         self.avg_stay = avg_stay
 
-    def is_open_date(self, when=datetime.datetime.now()):
+    def is_open_date(self, when=datetime.now()):
         for av in self.availabilities:
             if av.day == av.week_days[when.weekday()]:
                 if av.start_time < when.time() < av.end_time:
-                    return True and self.is_open
-
+                    return self.is_open
         return False

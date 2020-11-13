@@ -50,4 +50,3 @@ class TestTable(ModelTest):
         with self.assertRaises(ValueError):
             table.set_capacity(wrong_capacity)
         
-    

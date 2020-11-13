@@ -1,3 +1,5 @@
+from random import randint
+
 from faker import Faker
 
 from .dao_test import DaoTest
@@ -12,12 +14,8 @@ class TestRestaurantManager(DaoTest):
         
         from tests.models.test_restaurant import TestRestaurant
         cls.test_restaurant = TestRestaurant
-        from tests.models.test_operator import TestOperator
-        cls.test_operator = TestOperator
         from restaurants.dao import restaurant_manager
         cls.restaurant_manager = restaurant_manager.RestaurantManager
-        from restaurants.dao import customer_manager
-        cls.customer_manager = customer_manager.CustomerManager
     
     def test_create_restaurant(self):
         restaurant1, _ = self.test_restaurant.generate_random_restaurant()
@@ -47,11 +45,10 @@ class TestRestaurantManager(DaoTest):
 
     def test_retrieve_by_operator_id(self):
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
-        operator, _ = self.test_operator.generate_random_operator()
-        restaurant.owner = operator
+        operator_id = randint(0, 999)
+        restaurant.owner_id = operator_id
         self.restaurant_manager.create_restaurant(restaurant=restaurant)
-        self.customer_manager.create_customer(customer=operator)
-        retrieved_restaurant = self.restaurant_manager.retrieve_by_operator_id(operator_id=operator.id)
+        retrieved_restaurant = self.restaurant_manager.retrieve_by_operator_id(operator_id=operator_id)
         self.test_restaurant.assertEqualRestaurants(restaurant, retrieved_restaurant)
     
     def test_retrieve_by_menu_type(self):

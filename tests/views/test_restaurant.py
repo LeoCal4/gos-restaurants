@@ -8,7 +8,7 @@ class TestRestaurantViews(ViewTest):
     @classmethod
     def setUpClass(cls):
         super(TestRestaurantViews, cls).setUpClass()
-        from restaurants.dao.restaurant_manager import RestaurantManager
+        from gooutsafe.dao.restaurant_manager import RestaurantManager
         cls.restaurant_manager = RestaurantManager
         from tests.models.test_restaurant import TestRestaurant
         cls.test_restaurant = TestRestaurant 
@@ -16,33 +16,34 @@ class TestRestaurantViews(ViewTest):
         cls.test_availability = TestRestaurantAvailability
 
     def test_my_restaurant(self):
-        self.login_test_customer()
+        #self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         rv = self.client.get('/my_restaurant', follow_redirects=True)
         assert rv.status_code == 200
 
     def test_restaurants_sheet(self):
-        self.login_test_customer()
+        #self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         rv = self.client.get('/restaurants/' + str(restaurant.id))
         assert rv.status_code == 200
 
     def test_like_toggle(self):
-        self.login_test_customer()
+        #self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         rv = self.client.get('/restaurants/like/' + str(restaurant.id), follow_redirects=True)
         assert rv.status_code == 200
 
     def test_add_get(self):
-        owner = self.login_test_customer()
-        rv = self.client.get('/restaurants/add/' + str(owner.id), follow_redirects=True)
+        #owner = self.login_test_customer()
+        onwer_id = 0
+        rv = self.client.get('/restaurants/add/' + str(owner_id), follow_redirects=True)
         assert rv.status_code == 200
     
     def test_add_post(self):
-        owner = self.login_test_operator()
+        # owner = self.login_test_operator()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         data = {'name': restaurant.name, 'address': restaurant.address, 'city': restaurant.city,
                 'phone': str(restaurant.phone)}
@@ -50,20 +51,22 @@ class TestRestaurantViews(ViewTest):
         assert rv.status_code == 200
 
     def test_details_get(self):
-        customer = self.login_test_customer()
-        rv = self.client.get('/restaurants/details/' + str(customer.id), follow_redirects=True)
+        # customer = self.login_test_customer()
+        customer_id = 0
+        rv = self.client.get('/restaurants/details/' + str(customer_id), follow_redirects=True)
         assert rv.status_code == 200
 
     def test_details_post(self):
-        operator = self.login_test_operator()
+        # operator = self.login_test_operator()
+        operator_id = 0
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
-        restaurant.owner_id = operator.id
+        restaurant.owner_id = operator_id
         self.restaurant_manager.create_restaurant(restaurant)
-        rv = self.client.post('/restaurants/details/' + str(operator.id), follow_redirects=True)
+        rv = self.client.post('/restaurants/details/' + str(operator_id), follow_redirects=True)
         assert rv.status_code == 200
 
     def test_save_details_get(self):
-        customer = self.login_test_customer()
+        #customer = self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         rv = self.client.get('/restaurants/save/' + str(customer.id) + '/' + str(restaurant.id), follow_redirects=True)
@@ -79,14 +82,14 @@ class TestRestaurantViews(ViewTest):
         assert rv.status_code == 200
 
     def test_save_time_get(self):
-        customer = self.login_test_customer()
+        customer = #self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         rv = self.client.get('/restaurants/savetime/' + str(customer.id) + '/' +  str(restaurant.id), follow_redirects=True)
         assert rv.status_code == 200
 
     """def test_save_time_post(self):
-        customer = self.login_test_customer()
+        customer = #self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         start_time, end_time = self.test_availability.generate_correct_random_times()
@@ -95,7 +98,7 @@ class TestRestaurantViews(ViewTest):
         assert rv.status_code == 200"""
 
     def test_save_measure_get(self):
-        customer = self.login_test_customer()
+        customer = #self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         rv = self.client.get('/restaurants/savemeasure/' + str(customer.id) + '/' +  str(restaurant.id), follow_redirects=True)
@@ -111,7 +114,7 @@ class TestRestaurantViews(ViewTest):
         assert rv.status_code == 200
 
     def test_edit_restaurant_get(self):
-        owner = self.login_test_customer()
+        owner = #self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         rv = self.client.get('/edit_restaurant/' + str(owner.id) + '/' + str(restaurant.id), follow_redirects=True)

@@ -1,7 +1,8 @@
+from random import randint
+
 from faker import Faker
 
 from .model_test import ModelTest
-from .test_customer import TestCustomer
 from .test_restaurant import TestRestaurant
 
 
@@ -12,29 +13,26 @@ class TestLike(ModelTest):
     def generate_random_likes(cls):
         # Generate random restaurants
         restaurant, _ = TestRestaurant.generate_random_restaurant()
-        customer, _ = TestCustomer.generate_random_customer()
+        customer_id = randint(0, 999)
 
         from restaurants.models.like import Like
         like = Like(
             restaurant=restaurant,
-            liker=customer
+            liker_id=customer_id
         )
 
-        return like, (restaurant, customer)
+        return like, (restaurant, customer_id)
 
     def setUp(self):
         super(TestLike, self).setUp()
 
-        from restaurants.models import like
-        from restaurants.models import restaurant
+        from restaurants.models import like, restaurant
 
         self.like = like.Like
         self.restaurant = restaurant.Restaurant
 
     def test_init(self):
-        like, (restaurant, user) = self.generate_random_likes()
+        like, (restaurant, user_id) = self.generate_random_likes()
 
         self.assertEqual(like.restaurant.id, restaurant.id)
-        self.assertEqual(like.restaurant_id, restaurant.id)
-        self.assertEqual(like.liker, user)
-        self.assertEqual(like.liker_id, user.id)
+        self.assertEqual(like.liker_id, user_id)

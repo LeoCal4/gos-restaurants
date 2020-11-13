@@ -15,6 +15,10 @@ class Like(db.Model):
 
     restaurant_id = db.Column(
         db.Integer,
+        db.ForeignKey(
+            'Restaurant.id',
+            ondelete="CASCADE"
+        ),
         primary_key=True
     )
 
