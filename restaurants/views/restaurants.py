@@ -95,17 +95,22 @@ def add(id_op):
             location = geolocator.geocode(address+" "+city)
             lat = 0
             lon = 0
-            if location is not None:
-                lat = location.latitude
-                lon = location.longitude
+            if validate_location(location) is not False:
+                lat, lon = validate_location(location)
             restaurant = Restaurant(name, address, city, lat, lon, phone, menu_type)
             restaurant.owner_id = id_op
-
             RestaurantManager.create_restaurant(restaurant)
 
             return redirect(url_for('auth.operator', id=id_op))
     return render_template('create_restaurant.html', form=form)
 
+def validate_location(location)
+    if location is not None:
+        lat = location.latitude
+        lon = location.longitude
+        return lat, lon
+    else:
+        return False
 
 @restaurants.route('/restaurants/details/<int:id_op>', methods=['GET', 'POST'])
 # @login_required
@@ -196,18 +201,38 @@ def save_time(id_op, rest_id):
             day = time_form.data['day']
             start_time = time_form.data['start_time']
             end_time = time_form.data['end_time']
-            if end_time > start_time:
-                for ava in availabilities:
-                    if ava.day == day:
-                        ava.set_times(start_time, end_time)
-                        RestaurantAvailabilityManager.update_availability(ava)
-                        present = True
-                if not present:
-                    time = RestaurantAvailability(rest_id, day, start_time, end_time)
-                    RestaurantAvailabilityManager.create_availability(time)
-
+            if validate_ava(restaurant, availabilities, day, start_time, end_time):
+                flash('Opening Hours updated')
+            else:
+                flash('Error during opening hours updating')
     return redirect(url_for('restaurants.details', id_op=id_op))
 
+def validate_ava(restaurant, availabilities, day, start_time, end_time):
+    """This method validates the restaurant opening hours 
+
+    Args:
+        restaurant (restaurant): the actual restaurant
+        availabilities (Availabilities): already present restaurant opening hours
+        day (String):
+        start_time (time): opening hour
+        end_time (time): closing hour
+
+    Returns:
+        Boolean: True if the opening hours has been added correctly otherwise returns false 
+    """
+    present = False
+    if end_time > start_time:
+        for ava in availabilities:
+            if ava.day == day:
+                ava.set_times(start_time, end_time)
+                RestaurantAvailabilityManager.update_availability(ava)
+                present = True
+        if not present:
+            time = RestaurantAvailability(rest_id, day, start_time, end_time)
+            RestaurantAvailabilityManager.create_availability(time)
+        return True
+    else:
+        return False
 
 @restaurants.route('/restaurants/savemeasure/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
 # @login_required

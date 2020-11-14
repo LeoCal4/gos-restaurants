@@ -13,6 +13,9 @@ class Table(db.Model):
     restaurant_id = db.Column(db.Integer, db.ForeignKey('Restaurant.id', ondelete="CASCADE"))
     restaurant = relationship('Restaurant', back_populates="tables")
     capacity = db.Column(db.Integer)
+    
+    def serialize(self):
+        return dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
 
     def __init__(self, capacity, restaurant):
         self.capacity = capacity
