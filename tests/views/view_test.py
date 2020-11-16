@@ -4,7 +4,7 @@ import unittest
 class ViewTest(unittest.TestCase):
     """
     This class should be implemented by
-    all classes that tests views
+    all classes that tests resources
     """
     client = None
 
