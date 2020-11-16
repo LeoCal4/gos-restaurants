@@ -1,0 +1,426 @@
+openapi: 3.0.1
+info:
+  title: Restaurants Service API
+  description: Restaurants from GoOutSafe with Microservices
+  version: "0.1"
+servers:
+- url: /
+paths:
+  /my_restaurant:
+    post:
+      summary: Get current logged owner's restaurant
+      operationId: restaurants.views.restaurants.my_restaurant
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                user_id:          # <!--- form field name
+                  type: string
+              required:
+                - user_id
+      responses:
+        302: # TODO: change
+          description: Redirects to /restaurants/details/<user_id>
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Restaurant'
+        400:
+          description: Owner id not linked to any restaurant
+          content: {}
+  
+  /restaurants/{restaurant_id}:
+    get:
+      tags:
+      - Restaurants
+      summary: Get a single restaurant
+      operationId: restaurants.views.restaurants.restaurant_sheet
+      parameters:
+      - name: restaurant_id
+        in: path
+        description: Restaurant's Unique identifier
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Return restaurant
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - restaurant
+                  - list_measures
+                  - average_rate
+                  - max_rate
+                properties:
+                  restaurant:
+                    $ref: '#/components/schemas/Restaurant'
+                  list_measures:
+                    description: List of the security measures adopted by the restaurant
+                    type: array
+                    items:
+                      type: strings
+                  average_rate:
+                    description: Average rate of the restaurant
+                    type: float
+                  max_rate:
+                    description: Max rating of the restaurant
+                    type: integer
+        400:
+          description: Restaurant does not exist
+          content: {}
+
+  /restaurants/like/{restaurant_id}:
+    post:
+      tags:
+      - Restaurants
+      summary: Toggle the like on a restaurant
+      operationId: restaurants.views.restaurants.like_toggle
+      requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  user_id:          # <!--- form field name
+                    type: string
+                required:
+                  - user_id
+      parameters:
+      - name: restaurant_id
+        in: path
+        description: Restaurant's Unique identifier
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Return # TODO
+        400:
+          description: User id is not valid
+          content: {}
+
+  /restaurants/add/{id_op}:
+    get:
+      tags:
+        - Restaurants
+      summary: Returns the form needed to add a restaurant
+      operationId: restaurants.views.restaurants.get_add
+      parameters:
+      - name: id_op
+        in: path
+        description: Operator's Unique identifier
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Return the add restaurant form
+
+    post:
+      tags:
+      - Restaurants
+      summary: Creates a restaurant linked to the operator specified by id_op
+      operationId: restaurants.views.restaurants.post_add
+      requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  address:          
+                    type: string
+                  city:
+                    type: string
+                  phone:          
+                    type: string
+                  menu_type:
+                    type: string
+                required:
+                  - name
+                  - address
+                  - city
+                  - phone
+                  - menu_type
+      parameters:
+      - name: id_op
+        in: path
+        description: Operator's Unique identifier
+        required: true
+        schema:
+          type: integer
+      responses:
+        400:
+          description: Error in the form validation
+          content: {}
+        200:
+          description: Restaurant successfully added
+  
+  /restaurants/details/<id_op>:
+     get:
+      tags:
+        - Restaurants
+      summary: Show the information needed to properly render the restaurant details page
+      operationId: restaurants.views.restaurants.details
+      parameters:
+      - name: id_op
+        in: path
+        description: Operator's Unique identifier
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Returns all the restaurant information
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - restaurant
+                  - tables
+                  - table_form
+                  - time_form
+                  - times
+                  - measure_form
+                  - avg_time_form
+                  - avg_stay
+                  - list_measures
+                properties:
+                  restaurant:
+                    $ref: '#/components/schemas/Restaurant'
+                  tables:
+                    description: List of the restaurant's tables
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Table'
+                  table_form:
+                    description: Form to add a new table
+                    type: object
+                  time_form:
+                    description: Form to add a new availability
+                    type: object
+                  times:
+                    description: The restaurant opening hours
+                    type: array
+                    items:
+                      $ref: '#components/schemas/RestaurantAvailability'
+                  measure_form:
+                    description: Form to add a new security measure
+                    type: object
+                  avg_time_form:
+                    description: Form to add a new average stay time
+                    type: object
+                  avg_stay:
+                    description: The restaurant average stay time
+                    type: string
+                  list_measures:
+                    description: List of the security measures adopted by the restaurant
+                    type: array
+                    items:
+                      type: strings
+
+  /restaurants/add_tables/<id_op>/<rest_id>:
+    post:
+      tags:
+        - Restaurants
+      summary: Adds tables to the restaurants 
+      operationId: restaurants.views.restaurants.add_tables
+      parameters:
+      - name: id_op
+        in: path
+        description: Operator's Unique identifier
+        required: true
+        schema:
+          type: integer
+      - name: rest_id
+        in: path
+        description: Restaurant's unique identifier
+        required: true
+        schema:
+          type: integer
+      requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  number:
+                    type: integer
+                  max_capacity:          
+                    type: integer
+                required:
+                  - number
+                  - max_capacity
+      responses:
+        200:
+          description: Table successfully added
+        400:
+          description: Value Error in the tables' capacities
+          content: {} 
+  
+  /restaurants/save_time/<id_op>/<rest_id>:
+    post:
+      tags:
+        - Restaurants
+      summary: Adds availabilties to the restaurant specified by the rest_id
+      operationId: restaurants.views.restaurants.add_time
+      parameters:
+      - name: id_op
+        in: path
+        description: Operator's Unique identifier
+        required: true
+        schema:
+          type: integer
+      - name: rest_id
+        in: path
+        description: Restaurant's unique identifier
+        required: true
+        schema:
+          type: integer
+      requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  number:
+                    type: integer
+                  max_capacity:          
+                    type: integer
+                required:
+                  - day
+                  - start_time
+                  - end_time
+      responses:
+        200:
+          description: Table successfully added
+        400:
+          description: Value Error in the tables' capacities
+          content: {} 
+
+components:
+  schemas:
+    Restaurant:
+      description: The restaurant model
+      required:
+      - id
+      - name
+      - address
+      - city
+      - lat
+      - lon
+      - phone
+      - owner_id
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier
+          readOnly: true
+          example: 123
+        name:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: Restaurant's name
+          example: "My Pizza Restaurant"
+        address:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: Restaurant's address
+          example: "Via dei Panini, 3"
+        city:
+          maxLength: 100
+          minLength: 1
+          type: string
+          description: Restaurant's city
+          example: "Pisa"
+        lat:
+          type: number
+          description: Restaurant Latitude
+          example: 42.42
+        lon:
+          type: number
+          description: Restaurant Longitude
+          example: 42.42
+        phone:
+          type: string
+          minLength: 5
+          maxLength: 50
+          description: Restaurant Phone Number
+          example: "050123456"
+        owner_id:
+          type: integer
+          description: Unique owner identifier
+          example: 123
+    
+    Tables:
+      description: The restaurant's table model
+      required:
+        - id
+        - restaurant_id
+        - capacity
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier
+          readOnly: true
+          example: 123
+        restaurant_id:
+          type: integer
+          description: Restaurant's Unique Identifier
+          example: 123
+        capacity:
+          type: integer
+          description: The table max capacity
+          minimum: 1
+          maximum: 15
+          example: 6
+    
+    RestaurantAvailability:
+      description: The restaurant opening time model
+      required:
+        - id
+        - start_time
+        - end_time
+        - day
+        - restaurant_id
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier
+          readOnly: true
+          example: 123
+        start_time:
+          type: string
+          description: The opening time start time (hour)
+          example: "09:00" # TODO: check if this includes seconds
+        end_time:
+          type: string
+          description: The opening time end time (hour)
+          example: "12:00" # TODO: check if this includes seconds
+        day:
+          type: string
+          description: The opening time week day
+          pattern: '(Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day'
+          example: "Tuesday"
+        restaurant_id:
+          type: integer
+          description: Restaurant's Unique Identifier
+          example: 123
+    
