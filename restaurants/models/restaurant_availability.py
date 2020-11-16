@@ -17,6 +17,9 @@ class RestaurantAvailability(db.Model):
     restaurant_id = db.Column(db.Integer, db.ForeignKey("Restaurant.id", ondelete="CASCADE"))
     restaurant = relationship("Restaurant", back_populates="availabilities")
 
+    def serialize(self):
+        return dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
+
     def __init__(self, restaurant_id, day, start_time, end_time):
         self.restaurant_id = restaurant_id
         self.set_day(day)

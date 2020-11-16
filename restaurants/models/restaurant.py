@@ -58,6 +58,9 @@ class Restaurant(db.Model):
     ratings = relationship('RestaurantRating', back_populates='restaurant')
     likes = relationship('Like', back_populates='restaurant')
 
+    def serialize(self):
+        return dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
+
     def __init__(self, name, address, city, lat, lon, phone, menu_type):
         Restaurant.check_phone_number(phone)
         self.name = name
