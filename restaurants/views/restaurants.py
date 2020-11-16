@@ -104,7 +104,7 @@ def add(id_op):
             return redirect(url_for('auth.operator', id=id_op))
     return render_template('create_restaurant.html', form=form)
 
-def validate_location(location)
+def validate_location(location):
     if location is not None:
         lat = location.latitude
         lon = location.longitude
