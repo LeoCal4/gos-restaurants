@@ -274,7 +274,7 @@ def add_avg_stay(id_op, rest_id):
 # @restaurants.route('/edit_restaurant/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
 # @login_required
 def get_edit_restaurant(id_op, rest_id):
-    """This method allows the operator to edit the information about his restaurant
+    """This method returns the form to edit the restaurant details 
         Linked to /edit_restaurant/<id_op>/<rest_id> [GET]
     Args:
         id_op (int): univocal identifier of the operator
@@ -284,25 +284,8 @@ def get_edit_restaurant(id_op, rest_id):
         
     """
     form = RestaurantForm()
-    restaurant = RestaurantManager.retrieve_by_id(rest_id)
-
-    if request.method == "POST":
-        if form.is_submitted():
-            name = form.data['name']
-            restaurant.set_name(name)
-            address = form.data['address']
-            restaurant.set_address(address)
-            city = form.data['city']
-            restaurant.set_city(city)
-            phone = form.data['phone']
-            restaurant.set_phone(phone)
-            menu_type = form.data['menu_type']
-            restaurant.set_menu_type(menu_type)
-
-            RestaurantManager.update_restaurant(restaurant)
-            return redirect(url_for('auth.operator', id=id_op))
-
-    return render_template('update_restaurant.html', form=form)
+    return jsonify({'form': form})
+    # return render_template('update_restaurant.html', form=form)
 
 def post_edit_restaurant(id_op, rest_id):
     """This method allows the operator to edit the information about his restaurant
@@ -317,23 +300,23 @@ def post_edit_restaurant(id_op, rest_id):
     form = RestaurantForm()
     restaurant = RestaurantManager.retrieve_by_id(rest_id)
 
-    if request.method == "POST":
-        if form.is_submitted():
-            name = form.data['name']
-            restaurant.set_name(name)
-            address = form.data['address']
-            restaurant.set_address(address)
-            city = form.data['city']
-            restaurant.set_city(city)
-            phone = form.data['phone']
-            restaurant.set_phone(phone)
-            menu_type = form.data['menu_type']
-            restaurant.set_menu_type(menu_type)
+    if form.is_submitted():
+        name = form.data['name']
+        restaurant.set_name(name)
+        address = form.data['address']
+        restaurant.set_address(address)
+        city = form.data['city']
+        restaurant.set_city(city)
+        phone = form.data['phone']
+        restaurant.set_phone(phone)
+        menu_type = form.data['menu_type']
+        restaurant.set_menu_type(menu_type)
 
-            RestaurantManager.update_restaurant(restaurant)
-            return redirect(url_for('auth.operator', id=id_op))
-
-    return render_template('update_restaurant.html', form=form)
+        RestaurantManager.update_restaurant(restaurant)
+        return jsonify({'message': 'Restaurant correctly modified'}), 200
+        # return redirect(url_for('auth.operator', id=id_op))
+    return jsonify({}), 400
+    # return render_template('update_restaurant.html', form=form)
 
 ##### Helper methods #####
 
