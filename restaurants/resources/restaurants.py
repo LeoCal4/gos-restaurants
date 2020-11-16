@@ -183,8 +183,9 @@ def add_tables(id_op, rest_id):
         for _ in range(0, num_tables):
             table = Table(capacity=capacity, restaurant=restaurant)
             TableManager.create_table(table)
-    except ValueError:
-        return jsonify({'message': 'ValueError'}), 400
+    except Exception as e:
+        return jsonify({'message': 'DB ERROR\n' + e,
+                        'status': 'Internal Server Error'}), 500
         
     return jsonify({'message': 'Tables successfully added'}), 200
     # return redirect(url_for('restaurants.details', id_op=id_op))
@@ -201,16 +202,20 @@ def add_time(id_op, rest_id):
     Returns:
 
     """
-    time_form = TimesForm()
-    restaurant = RestaurantManager.retrieve_by_id(rest_id)
-    if time_form.is_submitted():
-        day = time_form.data['day']
-        start_time = time_form.data['start_time']
-        end_time = time_form.data['end_time']
-        if validate_ava(restaurant, day, start_time, end_time) is False:
-            return jsonify({'message': 'Error during opening hours updating'}), 400
-    return jsonify({'message': 'Opening Hours updated'}), 200
-            
+    restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
+
+    post_data = request.get_json()
+    try:
+        day = post_data.get('day')
+        start_time = post_data.get('start_time')
+        end_time = post_data.get('end_time')
+        restaurant = RestaurantManager.retrieve_by_id(rest_id)
+        validate_ava(restaurant, day, start_time, end_time)
+    except Exception as e:
+        return jsonify({'message': 'Error during opening hours updating\n' + e,
+                        'status': 'Bad Request'}), 400
+    return jsonify({'message': 'Opening Hours updated'
+                    'status': 'Success'}), 200      
     #TODO: handle the redirect
     #return redirect(url_for('restaurants.details', id_op=id_op))
 
@@ -228,19 +233,26 @@ def add_measure(id_op, rest_id):
     Returns:
 
     """
-    measure_form = MeasureForm()
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
-
-    if measure_form.is_submitted():
+    post_data = request.get_json()
+    try:
+        measure = post_data.get('measure')
         list_measure = restaurant.measures.split(',')
         measure = measure_form.data['measure']
         if measure not in list_measure:
             list_measure.append(measure)
         string = ','.join(list_measure)
         restaurant.set_measures(string)
+    except Exception as e:
+        return jsonify({'message': 'Error measures updating\n' + e,
+                        'status': 'Bad Request'}), 400
+    try:
         RestaurantManager.update_restaurant(restaurant)
-        return {'message': 'Measure added successfully'}, 200
-    return {}, 404
+    except Exception as e:
+        return jsonify({'message': 'DB ERROR\n' + e,
+                        'status': 'Internal Server Error'}), 500
+    return jsonify({'message': 'Measure added successfully',
+            'status': 'success'}), 200
 
 
 # @restaurants.route('/restaurants/avgstay/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
@@ -258,34 +270,19 @@ def add_avg_stay(id_op, rest_id):
     """
     avg_time_form = StayTimeForm()
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
-
-    if avg_time_form.validate_on_submit():
-        hours = avg_time_form.data['hours']
-        minute = avg_time_form.data['minutes']
+    post_data = request.get_json()
+    try:
+        hours = post_data.get('hours')
+        minute = post_data.get('minutes')
         minute = (hours * 60) + minute
         restaurant.set_avg_stay(minute)
         RestaurantManager.update_restaurant(restaurant)
-        return {'message': 'Average stay time successfully added'}, 200
-
-    return {}, 400
+    except Exception as e:
+        return jsonify({'message': 'Error during avg stay updating\n' + e,
+                        'status': 'Internal Server Error'}), 500        
+    return jsonify({'message': 'Average stay time successfully added'}), 200
     # return redirect(url_for('restaurants.details', id_op=id_op))
 
-
-# @restaurants.route('/edit_restaurant/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
-# @login_required
-def get_edit_restaurant(id_op, rest_id):
-    """This method returns the form to edit the restaurant details 
-        Linked to /edit_restaurant/<id_op>/<rest_id> [GET]
-    Args:
-        id_op (int): univocal identifier of the operator
-        rest_id (int): univocal identifier of the restaurant
-
-    Returns:
-        
-    """
-    form = RestaurantForm()
-    return jsonify({'form': form})
-    # return render_template('update_restaurant.html', form=form)
 
 def post_edit_restaurant(id_op, rest_id):
     """This method allows the operator to edit the information about his restaurant
@@ -363,4 +360,4 @@ def validate_ava(restaurant, day, start_time, end_time):
             RestaurantAvailabilityManager.create_availability(time)
         return True
     else:
-        return False
+        raise ValueError
