@@ -1,5 +1,5 @@
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
-                   url_for)
+                   url_for, jsonify)
 # from flask_login import current_user, login_required
 from restaurants.dao.like_manager import LikeManager
 from restaurants.dao.restaurant_availability_manager import \
@@ -142,8 +142,7 @@ def details(id_op):
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
 
     if restaurant is None:
-        # TODO: change or keep it?
-        return get_add(id_op)
+        return jsonify({'message': 'The Operator has added restaurant'}), 400
     list_measure = restaurant.measures.split(',')[1:]
     tables = TableManager.retrieve_by_restaurant_id(restaurant.id)
     ava = restaurant.availabilities
@@ -151,9 +150,9 @@ def details(id_op):
 
     avg_stay = convert_avg_stay_format(avg_stay)
 
-    return {'restaurant': restaurant, 'tables': tables, 'table_form': table_form,
+    return jsonify({'restaurant': restaurant, 'tables': tables, 'table_form': table_form,
             'time_form': time_form, 'times': ava, 'measure_form': measure_form, 
-            'avg_time_form': avg_time_form, 'avg_stay': avg_stay, 'list_measure': list_measure}, 200
+            'avg_time_form': avg_time_form, 'avg_stay': avg_stay, 'list_measure': list_measure}), 200
     # return render_template('add_restaurant_details.html',
     #                        restaurant=restaurant, tables=tables,
     #                        table_form=table_form, time_form=time_form,
@@ -175,20 +174,19 @@ def add_tables(id_op, rest_id):
         Invalid request if the tables data are not valid
         Tables successfully added otherwise
     """
-    table_form = TableForm()
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
 
-    if table_form.is_submitted():
-        num_tables = table_form.data['number']
-        capacity = table_form.data['max_capacity']
-        try:
-            for _ in range(0, num_tables):
-                table = Table(capacity=capacity, restaurant=restaurant)
-                TableManager.create_table(table)
-        except ValueError:
-            return {'message': 'ValueError'}, 400
-
-    return {'message': 'Tables successfully added'}, 200
+    post_data = request.get_json()
+    tables_number = post_data.get('number')
+    max_capacity = post_data.get('max_capacity')
+    try:
+        for _ in range(0, num_tables):
+            table = Table(capacity=capacity, restaurant=restaurant)
+            TableManager.create_table(table)
+    except ValueError:
+        return jsonify({'message': 'ValueError'}), 400
+        
+    return jsonify({'message': 'Tables successfully added'}), 200
     # return redirect(url_for('restaurants.details', id_op=id_op))
 
 
@@ -212,40 +210,15 @@ def add_time(id_op, rest_id):
         day = time_form.data['day']
         start_time = time_form.data['start_time']
         end_time = time_form.data['end_time']
-        if validate_ava(restaurant, day, start_time, end_time):
-            flash('Opening Hours updated')
-        else:
-            flash('Error during opening hours updating')
-    return redirect(url_for('restaurants.details', id_op=id_op))
+        if validate_ava(restaurant, day, start_time, end_time) is False:
+            return jsonify({'message': 'Error during opening hours updating'}), 400
+    return jsonify({'message': 'Opening Hours updated'}), 200
+            
+    #TODO: handle the redirect
+    #return redirect(url_for('restaurants.details', id_op=id_op))
 
-def validate_ava(restaurant, availabilities, day, start_time, end_time):
-    """This method validates the restaurant opening hours 
 
-    Args:
-        restaurant (restaurant): the actual restaurant
-        availabilities (Availabilities): already present restaurant opening hours
-        day (String):
-        start_time (time): opening hour
-        end_time (time): closing hour
-
-    Returns:
-        Boolean: True if the opening hours has been added correctly otherwise returns false 
-    """
-    present = False
-    if end_time > start_time:
-        for ava in availabilities:
-            if ava.day == day:
-                ava.set_times(start_time, end_time)
-                RestaurantAvailabilityManager.update_availability(ava)
-                present = True
-        if not present:
-            time = RestaurantAvailability(rest_id, day, start_time, end_time)
-            RestaurantAvailabilityManager.create_availability(time)
-        return True
-    else:
-        return False
-
-@restaurants.route('/restaurants/savemeasure/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
+# @restaurants.route('/restaurants/savemeasure/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
 # @login_required
 def save_measure(id_op, rest_id):
     """This method gives the operator the possibility to add precaution meausures 
@@ -270,8 +243,9 @@ def save_measure(id_op, rest_id):
             string = ','.join(list_measure)
             restaurant.set_measures(string)
             RestaurantManager.update_restaurant(restaurant)
-
-    return redirect(url_for('restaurants.details', id_op=id_op))
+        return jsonify({'message': 'List of Measures updated'}), 200
+    #TODO: handle the redirect
+    #return redirect(url_for('restaurants.details', id_op=id_op))
 
 
 @restaurants.route('/restaurants/avgstay/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
