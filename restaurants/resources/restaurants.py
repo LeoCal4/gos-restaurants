@@ -1,17 +1,11 @@
 from flask import (Blueprint, abort, flash, redirect, render_template, request,
                    url_for, jsonify)
-# from flask_login import current_user, login_required
 from restaurants.dao.like_manager import LikeManager
 from restaurants.dao.restaurant_availability_manager import \
     RestaurantAvailabilityManager
 from restaurants.dao.restaurant_manager import RestaurantManager
 from restaurants.dao.restaurant_rating_manager import RestaurantRatingManager
 from restaurants.dao.table_manager import TableManager
-from restaurants.forms.add_measure import MeasureForm
-from restaurants.forms.add_stay_time import StayTimeForm
-from restaurants.forms.add_table import TableForm
-from restaurants.forms.add_times import TimesForm
-from restaurants.forms.restaurant import RestaurantForm
 from restaurants.models.restaurant import Restaurant, geolocator
 from restaurants.models.restaurant_availability import RestaurantAvailability
 from restaurants.models.restaurant_rating import RestaurantRating
@@ -27,9 +21,13 @@ def my_restaurant():
     Returns:
         Redirects to the restaurants details method, or a failed response if the user_id is invalid
     """
-    user_id = request.form['user_id']
+    json_data = request.get_json()
+    user_id = json_data['user_id']
     if user_id is None:
-        return jsonify({}), 400
+        return jsonify({
+            'status': 'Bad request',
+            'message': 'The provided user_id is None'
+        }), 400
     return details(user_id)
 
 
@@ -43,15 +41,19 @@ def restaurant_sheet(restaurant_id):
         A json specifying the info needed to render the restaurant page otherwise
     """
     restaurant = RestaurantManager.retrieve_by_id(id_=restaurant_id)
-
     if restaurant is None:
-        return {}, 400
+        return jsonify({'status': 'Bad request',
+                        'message': 'The provided restaurant_id is not linked to any restaurant'
+                        }), 400
 
     list_measure = restaurant.measures.split(',')[1:]
     average_rate = RestaurantRatingManager.calculate_average_rate(restaurant)
 
-    return {'restaurant': restaurant, 'list_measures': list_measure, 
-            'average_rate': average_rate, 'max_rate': RestaurantRating.MAX_VALUE}, 200
+    return jsonify({'status': 'Success',
+                    'message': 'The restaurant details have been correctly fetched',
+                    'restaurant_sheet': {'restaurant': restaurant, 'list_measures': list_measure, 
+                                        'average_rate': average_rate, 'max_rate': RestaurantRating.MAX_VALUE}
+                    }), 200
 
 
 def like_toggle(restaurant_id):
@@ -63,33 +65,26 @@ def like_toggle(restaurant_id):
     Returns:
         Redirects to the single page for a restaurant
     """
-    user_id = request.form['user_id']
-    if user_id is None:
-        return {}, 400
-    # TODO: check if restaurant_id is valid
+    try:
+        json_data = request.get_json()
+        user_id = json_data['user_id']
+    except Exception as e:
+        return jsonify({'status': 'Bad request',
+                        'message': 'The provided user_id is not valid.\n' + e 
+                        }), 400
 
-    toggle_like(user_id, restaurant_id)
+    try:
+        toggle_like(user_id, restaurant_id)
+    except Exception as e:
+        return jsonify({'status': 'Internal server error',
+                'message': 'Error in toggling the like.\n' + e
+                }), 500
 
-    # TODO: should resources now redirect to other resources' methods or should 
-    #they just return their own messages and statuses?
-    return restaurant_sheet(restaurant_id)
-
-
-def get_add(id_op):
-    """Given an operator, this method returns the form used to add a restaurant
-        Linked to /restaurants/add/<id_op> [GET]
-    Args:
-        id_op (int): univocal identifier for the customer
-
-    Returns: 
-        The form to load in the page
-    """
-    form = RestaurantForm()
-    return {'form': form}, 200
+    return jsonify({'status': 'Success',
+                    'message': 'The like was correctly toggled'
+                    }), 200
 
 
-# @restaurants.route('/restaurants/add/<int:id_op>', methods=['GET', 'POST'])
-# @login_required
 def post_add(id_op):
     """Given an operator, this method allows him to add a restaurant
         Linked to /restaurants/add/<id_op> [POST]
@@ -100,32 +95,36 @@ def post_add(id_op):
         Invalid response if the request method or the form are not correct 
         Confirms the creation of the restaurant otherwise
     """
-    form = RestaurantForm()
-    if form.validate_on_submit():
-        name = form.data['name']
-        address = form.data['address']
-        city = form.data['city']
-        phone = form.data['phone']
-        menu_type = form.data['menu_type']
-        location = geolocator.geocode(address+" "+city)
-        lat = 0
-        lon = 0
-        if location is not None:
-            lat = location.latitude
-            lon = location.longitude
-        restaurant = Restaurant(name, address, city, lat, lon, phone, menu_type)
-        restaurant.owner_id = id_op
-
+    try:
+        json_data = request.get_json()
+        name = json_data['name']
+        address = json_data['address']
+        city = json_data['city']
+        phone = json_data['phone']
+        menu_type = json_data['menu_type']
+    except Exception as e:
+        return jsonify({'status': 'Bad request',
+                        'message': 'The data provided were not correct.\n' + e
+                        }), 400
+    location = geolocator.geocode(address+" "+city)
+    lat = 0
+    lon = 0
+    if location is not None:
+        lat = location.latitude
+        lon = location.longitude
+    restaurant = Restaurant(name, address, city, lat, lon, phone, menu_type)
+    restaurant.owner_id = id_op
+    try:
         RestaurantManager.create_restaurant(restaurant)
+    except Exception as e:
+        return jsonify({'status': 'Internal server error',
+                        'message': 'Error in saving the restaurant in the db.\n' + e
+                        }), 500
+    return jsonify({'status': 'Success',
+                    'message': 'Restaurant succesfully added'
+                    }), 200
 
-        # return redirect(url_for('auth.operator', id=id_op))
-        return {'message': 'Restaurant succesfully added'}, 200
-    return {}, 400
-    # return render_template('create_restaurant.html', form=form)
 
-
-# @restaurants.route('/restaurants/details/<int:id_op>', methods=['GET', 'POST'])
-# @login_required
 def details(id_op):
     """Given an operator, this method allows him to see the details of his restaurant
         Linked to /restaurants/details/<id_op> [GET]
@@ -135,34 +134,23 @@ def details(id_op):
     Returns:
         Returns the page of the restaurant's details
     """
-    table_form = TableForm()
-    time_form = TimesForm()
-    measure_form = MeasureForm()
-    avg_time_form = StayTimeForm()
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
-
     if restaurant is None:
-        return jsonify({'message': 'The Operator has added restaurant'}), 400
+        return jsonify({'status': 'Bad request',
+                        'message': 'The operator has no restaurant'
+                        }), 400
     list_measure = restaurant.measures.split(',')[1:]
     tables = TableManager.retrieve_by_restaurant_id(restaurant.id)
     ava = restaurant.availabilities
     avg_stay = restaurant.avg_stay
-
     avg_stay = convert_avg_stay_format(avg_stay)
-
-    return jsonify({'restaurant': restaurant, 'tables': tables, 'table_form': table_form,
-            'time_form': time_form, 'times': ava, 'measure_form': measure_form, 
-            'avg_time_form': avg_time_form, 'avg_stay': avg_stay, 'list_measure': list_measure}), 200
-    # return render_template('add_restaurant_details.html',
-    #                        restaurant=restaurant, tables=tables,
-    #                        table_form=table_form, time_form=time_form,
-    #                        times=ava, measure_form=measure_form, avg_time_form=avg_time_form,
-    #                        avg_stay=avg_stay,
-    #                        list_measure=list_measure[1:])
+    return jsonify({'status': 'Success',
+                    'message': 'The details were correctly loaded',
+                    'details': {'restaurant': restaurant, 'tables': tables, 'times': ava,
+                                'avg_stay': avg_stay, 'list_measure': list_measure}
+                    }), 200
 
 
-# @restaurants.route('/restaurants/save/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
-# @login_required
 def add_tables(id_op, rest_id):
     """This method gives the operator the possibility to add tables to his restaurant
         Linked to /restaurants/save_tables/<id_op>/<rest_id> [POST]
@@ -204,9 +192,9 @@ def add_time(id_op, rest_id):
     time_form = TimesForm()
     restaurant = RestaurantManager.retrieve_by_id(rest_id)
     if time_form.is_submitted():
-        day = time_form.data['day']
-        start_time = time_form.data['start_time']
-        end_time = time_form.data['end_time']
+        day = time_json_data['day']
+        start_time = time_json_data['start_time']
+        end_time = time_json_data['end_time']
         if validate_ava(restaurant, day, start_time, end_time) is False:
             return jsonify({'message': 'Error during opening hours updating'}), 400
     return jsonify({'message': 'Opening Hours updated'}), 200
@@ -233,7 +221,7 @@ def add_measure(id_op, rest_id):
 
     if measure_form.is_submitted():
         list_measure = restaurant.measures.split(',')
-        measure = measure_form.data['measure']
+        measure = measure_json_data['measure']
         if measure not in list_measure:
             list_measure.append(measure)
         string = ','.join(list_measure)
@@ -260,8 +248,8 @@ def add_avg_stay(id_op, rest_id):
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
 
     if avg_time_form.validate_on_submit():
-        hours = avg_time_form.data['hours']
-        minute = avg_time_form.data['minutes']
+        hours = avg_time_json_data['hours']
+        minute = avg_time_json_data['minutes']
         minute = (hours * 60) + minute
         restaurant.set_avg_stay(minute)
         RestaurantManager.update_restaurant(restaurant)
@@ -301,15 +289,15 @@ def post_edit_restaurant(id_op, rest_id):
     restaurant = RestaurantManager.retrieve_by_id(rest_id)
 
     if form.is_submitted():
-        name = form.data['name']
+        name = json_data['name']
         restaurant.set_name(name)
-        address = form.data['address']
+        address = json_data['address']
         restaurant.set_address(address)
-        city = form.data['city']
+        city = json_data['city']
         restaurant.set_city(city)
-        phone = form.data['phone']
+        phone = json_data['phone']
         restaurant.set_phone(phone)
-        menu_type = form.data['menu_type']
+        menu_type = json_data['menu_type']
         restaurant.set_menu_type(menu_type)
 
         RestaurantManager.update_restaurant(restaurant)

@@ -5,6 +5,7 @@ info:
   version: "0.1"
 servers:
 - url: /
+
 paths:
   /my_restaurant:
     post:
@@ -17,7 +18,7 @@ paths:
             schema:
               type: object
               properties:
-                user_id:          # <!--- form field name
+                user_id:
                   type: string
               required:
                 - user_id
@@ -53,25 +54,39 @@ paths:
               schema:
                 type: object
                 required:
-                  - restaurant
-                  - list_measures
-                  - average_rate
-                  - max_rate
+                  - status
+                  - message
+                  - restaurant_sheet
                 properties:
-                  restaurant:
-                    $ref: '#/components/schemas/Restaurant'
-                  list_measures:
-                    description: List of the security measures adopted by the restaurant
+                  resturant_sheet:
+                    type: object
+                    required:
+                      - restaurant
+                      - list_measures
+                      - average_rate
+                      - max_rate
+                    properties:
+                      restaurant:
+                        $ref: '#/components/schemas/Restaurant'
+                      list_measures:
+                        description: String list of the security measures adopted by the restaurant
+                        type: string
+                      average_rate:
+                        description: Average rate of the restaurant
+                        type: number
+                      max_rate:
+                        description: Max rating of the restaurant
+                        type: integer
+                  status:
                     type: string
-                  average_rate:
-                    description: Average rate of the restaurant
-                    type: number
-                  max_rate:
-                    description: Max rating of the restaurant
-                    type: integer
+                  message:
+                    type: string    
         400:
-          description: Restaurant does not exist
-          content: {}
+          description: Restaurant_id is not linked to any restaurant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   
   /restaurants/like/{restaurant_id}:
     post:
@@ -86,7 +101,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  user_id:          # <!--- form field name
+                  user_id:
                     type: string
                 required:
                   - user_id
@@ -99,28 +114,25 @@ paths:
           type: integer
       responses:
         200:
-          description: Return # TODO
+          description: The like was correctly toggled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
         400:
           description: User id is not valid
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Error in toggling the like
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
 
   /restaurants/add/{id_op}:
-    get:
-      tags:
-        - Restaurants
-      summary: Returns the form needed to add a restaurant
-      operationId: restaurants.resources.restaurants.get_add
-      parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      responses:
-        200:
-          description: Return the add restaurant form
-
     post:
       tags:
       - Restaurants
@@ -157,11 +169,24 @@ paths:
         schema:
           type: integer
       responses:
-        400:
-          description: Error in the form validation
-          content: {}
         200:
           description: Restaurant successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        400:
+          description: Error in the data validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Error in saving the restaurant in the db
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   
   /restaurants/details/{id_op}:
      get:
@@ -184,46 +209,47 @@ paths:
               schema:
                 type: object
                 required:
-                  - restaurant
-                  - tables
-                  - table_form
-                  - time_form
-                  - times
-                  - measure_form
-                  - avg_time_form
-                  - avg_stay
-                  - list_measures
+                  - status
+                  - message
+                  - details
                 properties:
-                  restaurant:
-                    $ref: '#/components/schemas/Restaurant'
-                  tables:
-                    description: List of the restaurant's tables
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Table'
-                  table_form:
-                    description: Form to add a new table
-                    type: object
-                  time_form:
-                    description: Form to add a new availability
-                    type: object
-                  times:
-                    description: The restaurant opening hours
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/RestaurantAvailability'
-                  measure_form:
-                    description: Form to add a new security measure
-                    type: object
-                  avg_time_form:
-                    description: Form to add a new average stay time
-                    type: object
-                  avg_stay:
-                    description: The restaurant average stay time
+                  status:
                     type: string
-                  list_measures:
-                    description: List of the security measures adopted by the restaurant
+                  message:
                     type: string
+                  details:
+                    type: object
+                    required:
+                      - restaurant
+                      - tables
+                      - times
+                      - avg_stay
+                      - list_measures
+                    properties:
+                      restaurant:
+                        $ref: '#/components/schemas/Restaurant'
+                      tables:
+                        description: List of the restaurant's tables
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Table'
+                      times:
+                        description: The restaurant opening hours
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RestaurantAvailability'
+                      avg_stay:
+                        description: The restaurant average stay time
+                        type: string
+                      list_measures:
+                        description: String list of the security measures adopted by the restaurant
+                        type: string
+        400:
+          description: The operator has no restaurant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
 
   /restaurants/add_tables/{id_op}/{rest_id}:
     post:
@@ -261,9 +287,16 @@ paths:
       responses:
         200:
           description: Table successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
         400:
           description: Value Error in the tables' capacities
-          content: {} 
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   
   /restaurants/save_time/{id_op}/{rest_id}:
     post:
@@ -568,3 +601,17 @@ components:
           type: integer
           description: Restaurant's Unique Identifier
           example: 123
+
+    Response:
+      description: Standard json response template
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          example: 'Success'
+        message:
+          type: string
+          example: 'Restaurant successfully added'
