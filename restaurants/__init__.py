@@ -4,6 +4,8 @@ from flask import Flask
 from flask_environments import Environments
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+import connexion
+from connexion.resolver import RestyResolver
 
 __version__ = '0.1'
 
@@ -23,7 +25,8 @@ def create_app():
     global migrate
     global login
 
-    app = Flask(__name__, instance_relative_config=True)
+    conn = connexion.App(__name__)#, instance_relative_config=True)
+    app = conn.app
 
     flask_env = os.getenv('FLASK_ENV', 'None')
     if flask_env == 'development':
@@ -46,7 +49,6 @@ def create_app():
     )
 
     # requiring the list of models
-
     register_extensions(app)
     register_blueprints(app)
 
@@ -64,6 +66,8 @@ def create_app():
     if flask_env == 'testing' or flask_env == 'development':
         register_test_blueprints(app)
 
+    conn.add_api('../swagger.yml')
+    
     return app
 
 

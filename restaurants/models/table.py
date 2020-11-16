@@ -15,7 +15,7 @@ class Table(db.Model):
     capacity = db.Column(db.Integer)
 
     def __init__(self, capacity, restaurant):
-        self.capacity = capacity
+        self.set_capacity(capacity)
         self.restaurant = restaurant
 
     def set_capacity(self, capacity):

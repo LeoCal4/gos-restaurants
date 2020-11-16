@@ -17,101 +17,118 @@ from restaurants.models.restaurant_availability import RestaurantAvailability
 from restaurants.models.restaurant_rating import RestaurantRating
 from restaurants.models.table import Table
 
+
 restaurants = Blueprint('restaurants', __name__)
 
 
-@restaurants.route('/my_restaurant')
-# @login_required
-def my_restaurant(methods=['GET','POST']):
-    """Given the operator, this method allows him to see the details of his restaurant
-
+def my_restaurant():
+    """Given the operator id, this method allows him to see the details of his restaurant
+        Linked to route /my_restaurant [POST]
     Returns:
-        Returns the page of the restaurant's details
+        Redirects to the restaurants details method, or a failed response if the user_id is invalid
     """
-    return details(current_user.id)
+    user_id = request.form['user_id']
+    if user_id is None:
+        return {}, 400
+    return details(user_id)
 
 
-@restaurants.route('/restaurants/<restaurant_id>')
-# @login_required
 def restaurant_sheet(restaurant_id):
-    """This method returns the single page for a restaurant
-
+    """This method returns a single restaurant
+        Linked to route /restaurants/{restaurant_id} [GET]
     Args:
         restaurant_id (int): univocal identifier of the restaurant
+    Returns: 
+        Invalid request if the restaurant does not exists
+        A json specifying the info needed to render the restaurant page otherwise
     """
     restaurant = RestaurantManager.retrieve_by_id(id_=restaurant_id)
 
     if restaurant is None:
-        return abort(404)
+        return {}, 400
 
-    list_measure = restaurant.measures.split(',')
+    list_measure = restaurant.measures.split(',')[1:]
     average_rate = RestaurantRatingManager.calculate_average_rate(restaurant)
 
-    return render_template("restaurantsheet.html",
-                           restaurant=restaurant, list_measures=list_measure[1:],
-                           average_rate=average_rate, max_rate=RestaurantRating.MAX_VALUE,
-                           )
+    return {'restaurant': restaurant, 'list_measures': list_measure, 
+            'average_rate': average_rate, 'max_rate': RestaurantRating.MAX_VALUE}, 200
 
 
-@restaurants.route('/restaurants/like/<restaurant_id>')
-# @login_required
 def like_toggle(restaurant_id):
     """Updates the like count
-
+        Linked ot /restaurants/like/<restaurant_id> [POST]
     Args:
         restaurant_id (int): univocal identifier of the restaurant
 
     Returns:
         Redirects to the single page for a restaurant
     """
-    if LikeManager.like_exists(current_user.id, restaurant_id):
-        LikeManager.delete_like(current_user.id, restaurant_id)
-    else:
-        LikeManager.create_like(current_user.id, restaurant_id)
+    user_id = request.form['user_id']
+    if user_id is None:
+        return {}, 400
+    # TODO: check if restaurant_id is valid
 
+    toggle_like(user_id, restaurant_id)
+
+    # TODO: should views now redirect to other views' methods or should 
+    #they just return their own messages and statuses?
     return restaurant_sheet(restaurant_id)
 
 
-@restaurants.route('/restaurants/add/<int:id_op>', methods=['GET', 'POST'])
-# @login_required
-def add(id_op):
-    """Given an operator, this method allows him to add a restaurant
+def get_add(id_op):
+    """Given an operator, this method returns the form used to add a restaurant
+        Linked to /restaurants/add/<id_op> [get]
+    Args:
+        id_op (int): univocal identifier for the customer
 
+    Returns: 
+        The form to load in the page
+    """
+    form = RestaurantForm()
+    return {'form': form}, 200
+
+
+# @restaurants.route('/restaurants/add/<int:id_op>', methods=['GET', 'POST'])
+# @login_required
+def post_add(id_op):
+    """Given an operator, this method allows him to add a restaurant
+        Linked to /restaurants/add/<id_op> [POST]
     Args:
         id_op (int): univocal identifier for the customer
 
     Returns:
-        Redirects the view to the operator's page
+        Invalid response if the request method or the form are not correct 
+        Confirms the creation of the restaurant otherwise
     """
     form = RestaurantForm()
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            print("ADD POST OKAY 60-77")
-            name = form.data['name']
-            address = form.data['address']
-            city = form.data['city']
-            phone = form.data['phone']
-            menu_type = form.data['menu_type']
-            location = geolocator.geocode(address+" "+city)
-            lat = 0
-            lon = 0
-            if location is not None:
-                lat = location.latitude
-                lon = location.longitude
-            restaurant = Restaurant(name, address, city, lat, lon, phone, menu_type)
-            restaurant.owner_id = id_op
+    if form.validate_on_submit():
+        name = form.data['name']
+        address = form.data['address']
+        city = form.data['city']
+        phone = form.data['phone']
+        menu_type = form.data['menu_type']
+        location = geolocator.geocode(address+" "+city)
+        lat = 0
+        lon = 0
+        if location is not None:
+            lat = location.latitude
+            lon = location.longitude
+        restaurant = Restaurant(name, address, city, lat, lon, phone, menu_type)
+        restaurant.owner_id = id_op
 
-            RestaurantManager.create_restaurant(restaurant)
+        RestaurantManager.create_restaurant(restaurant)
 
-            return redirect(url_for('auth.operator', id=id_op))
-    return render_template('create_restaurant.html', form=form)
+        # return redirect(url_for('auth.operator', id=id_op))
+        return {'message': 'Restaurant succesfully added'}, 200
+    return {}, 400
+    # return render_template('create_restaurant.html', form=form)
 
 
-@restaurants.route('/restaurants/details/<int:id_op>', methods=['GET', 'POST'])
+# @restaurants.route('/restaurants/details/<int:id_op>', methods=['GET', 'POST'])
 # @login_required
 def details(id_op):
     """Given an operator, this method allows him to see the details of his restaurant
-
+        Linked to /restaurants/details/<id_op> [GET]
     Args:
         id_op (int): univocal identifier of the operator
 
@@ -125,86 +142,85 @@ def details(id_op):
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
 
     if restaurant is None:
-        return add(current_user.id)
-    print("DETAILS OKAY 94-102")
-    list_measure = restaurant.measures.split(',')
+        # TODO: change or keep it?
+        return get_add(id_op)
+    list_measure = restaurant.measures.split(',')[1:]
     tables = TableManager.retrieve_by_restaurant_id(restaurant.id)
     ava = restaurant.availabilities
     avg_stay = restaurant.avg_stay
 
-    if avg_stay is not None:
-        h_avg_stay = avg_stay // 60
-        m_avg_stay = avg_stay - (h_avg_stay * 60)
-        avg_stay = "%dH:%dM" % (h_avg_stay, m_avg_stay)
-    else:
-        avg_stay = 0
+    avg_stay = convert_avg_stay_format(avg_stay)
 
-    return render_template('add_restaurant_details.html',
-                           restaurant=restaurant, tables=tables,
-                           table_form=table_form, time_form=time_form,
-                           times=ava, measure_form=measure_form, avg_time_form=avg_time_form,
-                           avg_stay=avg_stay,
-                           list_measure=list_measure[1:])
+    return {'restaurant': restaurant, 'tables': tables, 'table_form': table_form,
+            'time_form': time_form, 'times': ava, 'measure_form': measure_form, 
+            'avg_time_form': avg_time_form, 'avg_stay': avg_stay, 'list_measure': list_measure}, 200
+    # return render_template('add_restaurant_details.html',
+    #                        restaurant=restaurant, tables=tables,
+    #                        table_form=table_form, time_form=time_form,
+    #                        times=ava, measure_form=measure_form, avg_time_form=avg_time_form,
+    #                        avg_stay=avg_stay,
+    #                        list_measure=list_measure[1:])
 
 
-@restaurants.route('/restaurants/save/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
+# @restaurants.route('/restaurants/save/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
 # @login_required
-def save_details(id_op, rest_id):
+def add_tables(id_op, rest_id):
     """This method gives the operator the possibility to add tables to his restaurant
-
+        Linked to /restaurants/save_tables/<id_op>/<rest_id> [POST]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
 
     Returns:
-        Returns the page of the restaurant's details
+        Invalid request if the tables data are not valid
+        Tables successfully added otherwise
     """
     table_form = TableForm()
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
 
-    if request.method == "POST":
-        if table_form.is_submitted():
-            num_tables = table_form.data['number']
-            capacity = table_form.data['max_capacity']
+    if table_form.is_submitted():
+        num_tables = table_form.data['number']
+        capacity = table_form.data['max_capacity']
+        try:
+            for _ in range(0, num_tables):
+                table = Table(capacity=capacity, restaurant=restaurant)
+                TableManager.create_table(table)
+        except ValueError:
+            return {'message': 'ValueError'}, 400
 
-            for i in range(0, num_tables):
-                if capacity >= 1:
-                    table = Table(capacity=capacity, restaurant=restaurant)
-                    TableManager.create_table(table)
-
-    return redirect(url_for('restaurants.details', id_op=id_op))
+    return {'message': 'Tables successfully added'}, 200
+    # return redirect(url_for('restaurants.details', id_op=id_op))
 
 
-@restaurants.route('/restaurants/savetime/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
+# @restaurants.route('/restaurants/savetime/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
 # @login_required
-def save_time(id_op, rest_id):
+def add_time(id_op, rest_id):
     """This method gives the operator the possibility to add opening hours to his restaurant
-
+        Linked to /restaurants/save_time/<int:id_op>/<int:rest_id> [POST]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
 
     Returns:
-        Returns the page of the restaurant's details
+
     """
     time_form = TimesForm()
     restaurant = RestaurantManager.retrieve_by_id(rest_id)
     availabilities = restaurant.availabilities
     present = False
-    if request.method == "POST":
-        if time_form.is_submitted():
-            day = time_form.data['day']
-            start_time = time_form.data['start_time']
-            end_time = time_form.data['end_time']
-            if end_time > start_time:
-                for ava in availabilities:
-                    if ava.day == day:
-                        ava.set_times(start_time, end_time)
-                        RestaurantAvailabilityManager.update_availability(ava)
-                        present = True
-                if not present:
-                    time = RestaurantAvailability(rest_id, day, start_time, end_time)
-                    RestaurantAvailabilityManager.create_availability(time)
+    if time_form.is_submitted():
+        day = time_form.data['day']
+        start_time = time_form.data['start_time']
+        end_time = time_form.data['end_time']
+        if end_time > start_time:
+            for ava in availabilities:
+                if ava.day == day:
+                    ava.set_times(start_time, end_time)
+                    RestaurantAvailabilityManager.update_availability(ava)
+                    present = True
+            if not present:
+                time = RestaurantAvailability(rest_id, day, start_time, end_time)
+                RestaurantAvailabilityManager.create_availability(time)
 
     return redirect(url_for('restaurants.details', id_op=id_op))
 
@@ -289,3 +305,22 @@ def edit_restaurant(id_op, rest_id):
             return redirect(url_for('auth.operator', id=id_op))
 
     return render_template('update_restaurant.html', form=form)
+
+
+##### Helper methods #####
+
+def toggle_like(user_id, restaurant_id):
+    if LikeManager.like_exists(user_id, restaurant_id):
+        LikeManager.delete_like(user_id, restaurant_id)
+    else:
+        LikeManager.create_like(user_id, restaurant_id)
+
+
+def convert_avg_stay_format(avg_stay):
+    if avg_stay is not None:
+        h_avg_stay = avg_stay // 60
+        m_avg_stay = avg_stay - (h_avg_stay * 60)
+        avg_stay = "%dH:%dM" % (h_avg_stay, m_avg_stay)
+    else:
+        avg_stay = 0
+    return avg_stay
