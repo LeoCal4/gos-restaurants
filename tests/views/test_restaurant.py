@@ -82,7 +82,7 @@ class TestRestaurantViews(ViewTest):
         assert rv.status_code == 200
 
     def test_save_time_get(self):
-        customer = #self.login_test_customer()
+        #customer = self.login_test_customer()
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         rv = self.client.get('/restaurants/savetime/' + str(customer.id) + '/' +  str(restaurant.id), follow_redirects=True)
