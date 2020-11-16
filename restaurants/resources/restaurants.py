@@ -29,7 +29,7 @@ def my_restaurant():
     """
     user_id = request.form['user_id']
     if user_id is None:
-        return {}, 400
+        return jsonify({}), 400
     return details(user_id)
 
 
@@ -77,7 +77,7 @@ def like_toggle(restaurant_id):
 
 def get_add(id_op):
     """Given an operator, this method returns the form used to add a restaurant
-        Linked to /restaurants/add/<id_op> [get]
+        Linked to /restaurants/add/<id_op> [GET]
     Args:
         id_op (int): univocal identifier for the customer
 
@@ -198,14 +198,11 @@ def add_time(id_op, rest_id):
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
-
     Returns:
 
     """
     time_form = TimesForm()
     restaurant = RestaurantManager.retrieve_by_id(rest_id)
-    availabilities = restaurant.availabilities
-    present = False
     if time_form.is_submitted():
         day = time_form.data['day']
         start_time = time_form.data['start_time']
@@ -220,86 +217,106 @@ def add_time(id_op, rest_id):
 
 # @restaurants.route('/restaurants/savemeasure/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
 # @login_required
-def save_measure(id_op, rest_id):
+def add_measure(id_op, rest_id):
     """This method gives the operator the possibility to add precaution meausures 
     to his restaurant
-
+        Linked to /restaurants/save_measure/<id_op>/<rest_id> [POST]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
 
     Returns:
-        Returns the page of the restaurant's details
+
     """
     measure_form = MeasureForm()
     restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
 
-    if request.method == "POST":
-        if measure_form.is_submitted():
-            list_measure = restaurant.measures.split(',')
-            measure = measure_form.data['measure']
-            if measure not in list_measure:
-                list_measure.append(measure)
-            string = ','.join(list_measure)
-            restaurant.set_measures(string)
-            RestaurantManager.update_restaurant(restaurant)
-        return jsonify({'message': 'List of Measures updated'}), 200
-    #TODO: handle the redirect
-    #return redirect(url_for('restaurants.details', id_op=id_op))
+    if measure_form.is_submitted():
+        list_measure = restaurant.measures.split(',')
+        measure = measure_form.data['measure']
+        if measure not in list_measure:
+            list_measure.append(measure)
+        string = ','.join(list_measure)
+        restaurant.set_measures(string)
+        RestaurantManager.update_restaurant(restaurant)
+        return {'message': 'Measure added successfully'}, 200
+    return {}, 404
 
 
-@restaurants.route('/restaurants/avgstay/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
+# @restaurants.route('/restaurants/avgstay/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
 # @login_required
-def save_avg_stay(id_op, rest_id):
-    avg_time_form = StayTimeForm()
-    restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
-
-    if request.method == "POST":
-        if avg_time_form.validate_on_submit():
-            hours = avg_time_form.data['hours']
-            minute = avg_time_form.data['minutes']
-            minute = (hours * 60) + minute
-            restaurant.set_avg_stay(minute)
-            RestaurantManager.update_restaurant(restaurant)
-        else:
-            flash("Insert positive values")
-
-    return redirect(url_for('restaurants.details', id_op=id_op))
-
-
-@restaurants.route('/edit_restaurant/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
-# @login_required
-def edit_restaurant(id_op, rest_id):
-    """This method allows the operator to edit the information about his restaurant
-
+def add_avg_stay(id_op, rest_id):
+    """This method gives the operator the possibility to add the average
+    stay time to his restaurant
+        Linked to /restaurants/save_avg_time/<id_op>/<rest_id> [POST]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
 
     Returns:
-        Returns the page of the restaurant's details
+
+    """
+    avg_time_form = StayTimeForm()
+    restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
+
+    if avg_time_form.validate_on_submit():
+        hours = avg_time_form.data['hours']
+        minute = avg_time_form.data['minutes']
+        minute = (hours * 60) + minute
+        restaurant.set_avg_stay(minute)
+        RestaurantManager.update_restaurant(restaurant)
+        return {'message': 'Average stay time successfully added'}, 200
+
+    return {}, 400
+    # return redirect(url_for('restaurants.details', id_op=id_op))
+
+
+# @restaurants.route('/edit_restaurant/<int:id_op>/<int:rest_id>', methods=['GET', 'POST'])
+# @login_required
+def get_edit_restaurant(id_op, rest_id):
+    """This method returns the form to edit the restaurant details 
+        Linked to /edit_restaurant/<id_op>/<rest_id> [GET]
+    Args:
+        id_op (int): univocal identifier of the operator
+        rest_id (int): univocal identifier of the restaurant
+
+    Returns:
+        
+    """
+    form = RestaurantForm()
+    return jsonify({'form': form})
+    # return render_template('update_restaurant.html', form=form)
+
+def post_edit_restaurant(id_op, rest_id):
+    """This method allows the operator to edit the information about his restaurant
+        Linked to /edit_restaurant/<id_op>/<rest_id> [POST]
+    Args:
+        id_op (int): univocal identifier of the operator
+        rest_id (int): univocal identifier of the restaurant
+
+    Returns:
+        
     """
     form = RestaurantForm()
     restaurant = RestaurantManager.retrieve_by_id(rest_id)
 
-    if request.method == "POST":
-        if form.is_submitted():
-            name = form.data['name']
-            restaurant.set_name(name)
-            address = form.data['address']
-            restaurant.set_address(address)
-            city = form.data['city']
-            restaurant.set_city(city)
-            phone = form.data['phone']
-            restaurant.set_phone(phone)
-            menu_type = form.data['menu_type']
-            restaurant.set_menu_type(menu_type)
+    if form.is_submitted():
+        name = form.data['name']
+        restaurant.set_name(name)
+        address = form.data['address']
+        restaurant.set_address(address)
+        city = form.data['city']
+        restaurant.set_city(city)
+        phone = form.data['phone']
+        restaurant.set_phone(phone)
+        menu_type = form.data['menu_type']
+        restaurant.set_menu_type(menu_type)
 
-            RestaurantManager.update_restaurant(restaurant)
-            return redirect(url_for('auth.operator', id=id_op))
-
-    return render_template('update_restaurant.html', form=form)
-
+        RestaurantManager.update_restaurant(restaurant)
+        return jsonify({'message': 'Restaurant correctly modified'}), 200
+        # return redirect(url_for('auth.operator', id=id_op))
+    return jsonify({}), 400
+    # return render_template('update_restaurant.html', form=form)
 
 ##### Helper methods #####
 
@@ -319,12 +336,12 @@ def convert_avg_stay_format(avg_stay):
         avg_stay = 0
     return avg_stay
 
+
 def validate_ava(restaurant, day, start_time, end_time):
     """This method validates the restaurant opening hours 
 
     Args:
         restaurant (restaurant): the actual restaurant
-        availabilities (Availabilities): already present restaurant opening hours
         day (String):
         start_time (time): opening hour
         end_time (time): closing hour
