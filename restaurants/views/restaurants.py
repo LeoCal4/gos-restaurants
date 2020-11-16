@@ -212,16 +212,10 @@ def add_time(id_op, rest_id):
         day = time_form.data['day']
         start_time = time_form.data['start_time']
         end_time = time_form.data['end_time']
-        if end_time > start_time:
-            for ava in availabilities:
-                if ava.day == day:
-                    ava.set_times(start_time, end_time)
-                    RestaurantAvailabilityManager.update_availability(ava)
-                    present = True
-            if not present:
-                time = RestaurantAvailability(rest_id, day, start_time, end_time)
-                RestaurantAvailabilityManager.create_availability(time)
-
+        if validate_ava(restaurant, day, start_time, end_time):
+            flash('Opening Hours updated')
+        else:
+            flash('Error during opening hours updating')
     return redirect(url_for('restaurants.details', id_op=id_op))
 
 def validate_ava(restaurant, availabilities, day, start_time, end_time):
@@ -350,3 +344,32 @@ def convert_avg_stay_format(avg_stay):
     else:
         avg_stay = 0
     return avg_stay
+
+def validate_ava(restaurant, day, start_time, end_time):
+    """This method validates the restaurant opening hours 
+
+    Args:
+        restaurant (restaurant): the actual restaurant
+        availabilities (Availabilities): already present restaurant opening hours
+        day (String):
+        start_time (time): opening hour
+        end_time (time): closing hour
+
+    Returns:
+        Boolean: True if the opening hours has been added correctly otherwise returns false 
+    """
+    availabilities = restaurant.availabilities
+    rest_id = restaurant.id
+    present = False
+    if end_time > start_time:
+        for ava in availabilities:
+            if ava.day == day:
+                ava.set_times(start_time, end_time)
+                RestaurantAvailabilityManager.update_availability(ava)
+                present = True
+        if not present:
+            time = RestaurantAvailability(rest_id, day, start_time, end_time)
+            RestaurantAvailabilityManager.create_availability(time)
+        return True
+    else:
+        return False
