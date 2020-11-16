@@ -70,7 +70,7 @@ def like_toggle(restaurant_id):
 
     toggle_like(user_id, restaurant_id)
 
-    # TODO: should views now redirect to other views' methods or should 
+    # TODO: should resources now redirect to other resources' methods or should 
     #they just return their own messages and statuses?
     return restaurant_sheet(restaurant_id)
 

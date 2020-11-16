@@ -25,8 +25,13 @@ def create_app():
     global migrate
     global login
 
-    conn = connexion.App(__name__)#, instance_relative_config=True)
-    app = conn.app
+    api_app = connexion.App(
+        __name__,
+        server='flask',
+        specification_dir='openapi/')
+    
+    # getting the flask app
+    app = api_app.app
 
     flask_env = os.getenv('FLASK_ENV', 'None')
     if flask_env == 'development':
@@ -66,10 +71,27 @@ def create_app():
     if flask_env == 'testing' or flask_env == 'development':
         register_test_blueprints(app)
 
-    conn.add_api('../swagger.yml')
+    # registering to api app all specifications
+    register_specifications(app)
     
     return app
 
+
+def register_specifications(_api_app):
+    """
+    This function registers all resources in the flask application
+    :param _api_app: Flask Application Object
+    :return: None
+    """
+
+    # we need to scan the specifications package and add all yaml files.
+    from importlib_resources import files
+    folder = files('gooutsafe.specifications')
+    for _, _, files in os.walk(folder):
+        for file in files:
+            if file.endswith('.yaml') or file.endswith('.yml'):
+                file_path = folder.joinpath(file);
+                _api_app.add_api(file_path)
 
 def register_extensions(app):
     """
@@ -89,11 +111,11 @@ def register_extensions(app):
 
 def register_blueprints(app):
     """
-    This function registers all views in the flask application
+    This function registers all resources in the flask application
     :param app: Flask Application Object
     :return: None
     """
-    from restaurants.views import blueprints
+    from restaurants.resources import blueprints
     for bp in blueprints:
         app.register_blueprint(bp, url_prefix='/')
 
@@ -105,5 +127,5 @@ def register_test_blueprints(app):
     :return: None
     """
 
-    from restaurants.views.utils import utils
+    from restaurants.resources.utils import utils
     app.register_blueprint(utils)

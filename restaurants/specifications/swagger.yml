@@ -9,7 +9,7 @@ paths:
   /my_restaurant:
     post:
       summary: Get current logged owner's restaurant
-      operationId: restaurants.views.restaurants.my_restaurant
+      operationId: restaurants.resources.restaurants.my_restaurant
       requestBody:
         required: true
         content:
@@ -37,7 +37,7 @@ paths:
       tags:
       - Restaurants
       summary: Get a single restaurant
-      operationId: restaurants.views.restaurants.restaurant_sheet
+      operationId: restaurants.resources.restaurants.restaurant_sheet
       parameters:
       - name: restaurant_id
         in: path
@@ -80,7 +80,7 @@ paths:
       tags:
       - Restaurants
       summary: Toggle the like on a restaurant
-      operationId: restaurants.views.restaurants.like_toggle
+      operationId: restaurants.resources.restaurants.like_toggle
       requestBody:
           required: true
           content:
@@ -111,7 +111,7 @@ paths:
       tags:
         - Restaurants
       summary: Returns the form needed to add a restaurant
-      operationId: restaurants.views.restaurants.get_add
+      operationId: restaurants.resources.restaurants.get_add
       parameters:
       - name: id_op
         in: path
@@ -127,7 +127,7 @@ paths:
       tags:
       - Restaurants
       summary: Creates a restaurant linked to the operator specified by id_op
-      operationId: restaurants.views.restaurants.post_add
+      operationId: restaurants.resources.restaurants.post_add
       requestBody:
           required: true
           content:
@@ -170,7 +170,7 @@ paths:
       tags:
         - Restaurants
       summary: Show the information needed to properly render the restaurant details page
-      operationId: restaurants.views.restaurants.details
+      operationId: restaurants.resources.restaurants.details
       parameters:
       - name: id_op
         in: path
@@ -234,7 +234,7 @@ paths:
       tags:
         - Restaurants
       summary: Adds tables to the restaurants 
-      operationId: restaurants.views.restaurants.add_tables
+      operationId: restaurants.resources.restaurants.add_tables
       parameters:
       - name: id_op
         in: path
@@ -274,7 +274,7 @@ paths:
       tags:
         - Restaurants
       summary: Adds availabilties to the restaurant specified by the rest_id
-      operationId: restaurants.views.restaurants.add_time
+      operationId: restaurants.resources.restaurants.add_time
       parameters:
       - name: id_op
         in: path
@@ -295,10 +295,12 @@ paths:
               schema:
                 type: object
                 properties:
-                  number:
-                    type: integer
-                  max_capacity:          
-                    type: integer
+                  day:
+                    type: string
+                  start_time:          
+                    type: string
+                  end_time:
+                    type: string
                 required:
                   - day
                   - start_time
