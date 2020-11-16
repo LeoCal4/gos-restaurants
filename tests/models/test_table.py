@@ -21,7 +21,7 @@ class TestTable(ModelTest):
     @staticmethod
     def generate_random_table(fixed_restaurant=None):
         from restaurants.models.table import Table
-        capacity = TestTable.faker.random_int(min=0,max=15)
+        capacity = TestTable.faker.random_int(min=1,max=15)
         if fixed_restaurant is None:
             test_table = TestTable()
             test_table.setUpClass()
