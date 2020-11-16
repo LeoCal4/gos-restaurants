@@ -64,7 +64,7 @@ paths:
                     description: List of the security measures adopted by the restaurant
                     type: array
                     items:
-                      type: strings
+                      type: string
                   average_rate:
                     description: Average rate of the restaurant
                     type: float
@@ -74,7 +74,7 @@ paths:
         400:
           description: Restaurant does not exist
           content: {}
-
+  
   /restaurants/like/{restaurant_id}:
     post:
       tags:
@@ -227,7 +227,7 @@ paths:
                     description: List of the security measures adopted by the restaurant
                     type: array
                     items:
-                      type: strings
+                      type: string
 
   /restaurants/add_tables/<id_op>/<rest_id>:
     post:
@@ -307,10 +307,87 @@ paths:
                   - end_time
       responses:
         200:
-          description: Table successfully added
+          description: Availability successfully added
         400:
-          description: Value Error in the tables' capacities
-          content: {} 
+          description: Can't add new availability
+          content: {}
+  
+  /restaurants/save_measure/<id_op>/<rest_id>:
+    post:
+      tags:
+        - Restaurants
+      summary: Adds security measures to the restaurant specified by the rest_id
+      operationId: restaurants.resources.restaurants.add_measure
+      parameters:
+      - name: id_op
+        in: path
+        description: Operator's Unique identifier
+        required: true
+        schema:
+          type: integer
+      - name: rest_id
+        in: path
+        description: Restaurant's unique identifier
+        required: true
+        schema:
+          type: integer
+      requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  measure:
+                    type: string
+                required:
+                  - measure
+      responses:
+        200:
+          description: Measure successfully added
+        400:
+          description: Can't add new measure
+          content: {}
+  
+  /restaurants/save_avg_time/<id_op>/<rest_id>:
+    post:
+      tags:
+        - Restaurants
+      summary: Adds average stay time to the restaurant specified by the rest_id
+      operationId: restaurants.resources.restaurants.add_avg_stay
+      parameters:
+      - name: id_op
+        in: path
+        description: Operator's Unique identifier
+        required: true
+        schema:
+          type: integer
+      - name: rest_id
+        in: path
+        description: Restaurant's unique identifier
+        required: true
+        schema:
+          type: integer
+      requestBody:
+          required: true
+          content:
+            application/x-www-form-urlencoded:
+              schema:
+                type: object
+                properties:
+                  hours:
+                    type: string
+                  minutes:
+                    type: string
+                required:
+                  - hours
+                  - minutes
+      responses:
+        200:
+          description: Average stay time successfully added
+        400:
+          description: Can't add new average stay time
+          content: {}
 
 components:
   schemas:
