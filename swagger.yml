@@ -62,12 +62,10 @@ paths:
                     $ref: '#/components/schemas/Restaurant'
                   list_measures:
                     description: List of the security measures adopted by the restaurant
-                    type: array
-                    items:
-                      type: strings
+                    type: string
                   average_rate:
                     description: Average rate of the restaurant
-                    type: float
+                    type: number
                   max_rate:
                     description: Max rating of the restaurant
                     type: integer
@@ -165,7 +163,7 @@ paths:
         200:
           description: Restaurant successfully added
   
-  /restaurants/details/<id_op>:
+  /restaurants/details/{id_op}:
      get:
       tags:
         - Restaurants
@@ -213,7 +211,7 @@ paths:
                     description: The restaurant opening hours
                     type: array
                     items:
-                      $ref: '#components/schemas/RestaurantAvailability'
+                      $ref: '#/components/schemas/RestaurantAvailability'
                   measure_form:
                     description: Form to add a new security measure
                     type: object
@@ -225,11 +223,9 @@ paths:
                     type: string
                   list_measures:
                     description: List of the security measures adopted by the restaurant
-                    type: array
-                    items:
-                      type: strings
+                    type: string
 
-  /restaurants/add_tables/<id_op>/<rest_id>:
+  /restaurants/add_tables/{id_op}/{rest_id}:
     post:
       tags:
         - Restaurants
@@ -269,7 +265,7 @@ paths:
           description: Value Error in the tables' capacities
           content: {} 
   
-  /restaurants/save_time/<id_op>/<rest_id>:
+  /restaurants/save_time/{id_op}/{rest_id}:
     post:
       tags:
         - Restaurants
@@ -367,7 +363,7 @@ components:
           description: Unique owner identifier
           example: 123
     
-    Tables:
+    Table:
       description: The restaurant's table model
       required:
         - id
