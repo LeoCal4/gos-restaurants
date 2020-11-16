@@ -418,28 +418,6 @@ paths:
           description: Can't add new average stay time
           content: {}
 
-  /restaurants/edit_restaurant/{id_op}/{rest_id}:
-    get:
-      tags:
-        - Restaurants
-      summary: Adds average stay time to the restaurant specified by the rest_id
-      operationId: restaurants.resources.restaurants.get_edit_restaurant
-      parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      - name: rest_id
-        in: path
-        description: Restaurant's unique identifier
-        required: true
-        schema:
-          type: integer
-      responses:
-        200:
-          description: Form to edit the restaurant
     post:
       tags:
         - Restaurants
