@@ -80,7 +80,7 @@ paths:
                   status:
                     type: string
                   message:
-                    type: string    
+                    type: string
         400:
           description: Restaurant_id is not linked to any restaurant
           content:
@@ -147,11 +147,11 @@ paths:
                 properties:
                   name:
                     type: string
-                  address:          
+                  address:
                     type: string
                   city:
                     type: string
-                  phone:          
+                  phone:
                     type: string
                   menu_type:
                     type: string
@@ -279,7 +279,7 @@ paths:
                 properties:
                   number:
                     type: integer
-                  max_capacity:          
+                  max_capacity:
                     type: integer
                 required:
                   - number
@@ -326,7 +326,7 @@ paths:
                 properties:
                   day:
                     type: string
-                  start_time:          
+                  start_time:
                     type: string
                   end_time:
                     type: string
@@ -452,11 +452,11 @@ paths:
               properties:
                 name:
                   type: string
-                address:          
+                address:
                   type: string
                 city:
                   type: string
-                phone:          
+                phone:
                   type: string
                 menu_type:
                   type: string

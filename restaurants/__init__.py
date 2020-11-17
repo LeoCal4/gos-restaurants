@@ -72,7 +72,7 @@ def create_app():
         register_test_blueprints(app)
 
     # registering to api app all specifications
-    register_specifications(app)
+    register_specifications(api_app)
     
     return app
 
@@ -86,12 +86,13 @@ def register_specifications(_api_app):
 
     # we need to scan the specifications package and add all yaml files.
     from importlib_resources import files
-    folder = files('gooutsafe.specifications')
+    folder = files('restaurants.specifications')
     for _, _, files in os.walk(folder):
         for file in files:
             if file.endswith('.yaml') or file.endswith('.yml'):
-                file_path = folder.joinpath(file);
+                file_path = folder.joinpath(file)
                 _api_app.add_api(file_path)
+
 
 def register_extensions(app):
     """
