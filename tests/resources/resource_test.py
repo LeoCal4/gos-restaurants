@@ -10,7 +10,7 @@ class ResourceTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        from gooutsafe import create_app
+        from restaurants import create_app
         app = create_app()
         cls.client = app.test_client()
         from tests.models.test_restaurant import TestRestaurant

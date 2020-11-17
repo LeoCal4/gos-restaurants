@@ -16,7 +16,7 @@ class TableManager(Manager):
     @staticmethod
     def retrieve_by_restaurant_id(restaurant_id):
         Manager.check_none(restaurant_id=restaurant_id)
-        return Table.query.filter(Table.restaurant_id==restaurant_id)
+        return Table.query.filter(Table.restaurant_id==restaurant_id).all()
 
     @staticmethod
     def update_table(table: Table):

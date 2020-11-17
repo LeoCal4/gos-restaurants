@@ -297,8 +297,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+        500:
+          description: Error in DB
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   
-  /restaurants/save_time/{id_op}/{rest_id}:
+  /restaurants/add_time/{id_op}/{rest_id}:
     post:
       tags:
         - Restaurants
@@ -348,7 +354,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
   
-  /restaurants/save_measure/{id_op}/{rest_id}:
+  /restaurants/add_measure/{id_op}/{rest_id}:
     post:
       tags:
         - Restaurants
@@ -370,7 +376,7 @@ paths:
       requestBody:
           required: true
           content:
-            application/x-www-form-urlencoded:
+            application/json:
               schema:
                 type: object
                 properties:
@@ -385,7 +391,7 @@ paths:
           description: Can't add new measure
           content: {}
   
-  /restaurants/save_avg_time/{id_op}/{rest_id}:
+  /restaurants/add_avg_stay/{id_op}/{rest_id}:
     post:
       tags:
         - Restaurants
@@ -407,14 +413,14 @@ paths:
       requestBody:
           required: true
           content:
-            application/x-www-form-urlencoded:
+            application/json:
               schema:
                 type: object
                 properties:
                   hours:
-                    type: string
+                    type: integer
                   minutes:
-                    type: string
+                    type: integer
                 required:
                   - hours
                   - minutes
@@ -424,7 +430,8 @@ paths:
         400:
           description: Can't add new average stay time
           content: {}
-
+          
+  /edit_restaurant/{id_op}/{rest_id}:
     post:
       tags:
         - Restaurants
@@ -446,7 +453,7 @@ paths:
       requestBody:
         required: true
         content:
-          application/x-www-form-urlencoded:
+          application/json:
             schema:
               type: object
               properties:
