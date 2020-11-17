@@ -15,22 +15,6 @@ from restaurants.models.table import Table
 restaurants = Blueprint('restaurants', __name__)
 
 
-def my_restaurant():
-    """Given the operator id, this method allows him to see the details of his restaurant
-        Linked to route /my_restaurant [POST]
-    Returns:
-        Redirects to the restaurants details method, or a failed response if the user_id is invalid
-    """
-    json_data = request.get_json()
-    user_id = json_data['user_id']
-    if user_id is None:
-        return jsonify({
-            'status': 'Bad request',
-            'message': 'The provided user_id is None'
-        }), 400
-    return details(user_id)
-
-
 def restaurant_sheet(restaurant_id):
     """This method returns a single restaurant
         Linked to route /restaurants/{restaurant_id} [GET]
@@ -51,7 +35,7 @@ def restaurant_sheet(restaurant_id):
 
     return jsonify({'status': 'Success',
                     'message': 'The restaurant details have been correctly fetched',
-                    'restaurant_sheet': {'restaurant': restaurant, 'list_measures': list_measure, 
+                    'restaurant_sheet': {'restaurant': restaurant.serialize(), 'list_measures': list_measure, 
                                         'average_rate': average_rate, 'max_rate': RestaurantRating.MAX_VALUE}
                     }), 200
 
@@ -146,7 +130,7 @@ def details(id_op):
     avg_stay = convert_avg_stay_format(avg_stay)
     return jsonify({'status': 'Success',
                     'message': 'The details were correctly loaded',
-                    'details': {'restaurant': restaurant, 'tables': tables, 'times': ava,
+                    'details': {'restaurant': restaurant.serialize(), 'tables': tables, 'times': ava,
                                 'avg_stay': avg_stay, 'list_measure': list_measure}
                     }), 200
 

@@ -7,31 +7,6 @@ servers:
 - url: /
 
 paths:
-  /my_restaurant:
-    post:
-      summary: Get current logged owner's restaurant
-      operationId: restaurants.resources.restaurants.my_restaurant
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user_id:
-                  type: string
-              required:
-                - user_id
-      responses:
-        302: # TODO: change
-          description: Redirects to /restaurants/details/<user_id>
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Restaurant'
-        400:
-          description: Owner id not linked to any restaurant
-          content: {}
   
   /restaurants/{restaurant_id}:
     get:
@@ -424,7 +399,8 @@ paths:
         400:
           description: Can't add new average stay time
           content: {}
-
+  
+  /edit_restaurant/{id_op}/{rest_id}:
     post:
       tags:
         - Restaurants
