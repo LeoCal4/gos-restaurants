@@ -337,9 +337,16 @@ paths:
       responses:
         200:
           description: Availability successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
         400:
           description: Can't add new availability
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
   
   /restaurants/save_measure/{id_op}/{rest_id}:
     post:
