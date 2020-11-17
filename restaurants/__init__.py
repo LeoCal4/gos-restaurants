@@ -93,6 +93,7 @@ def register_specifications(_api_app):
                 file_path = folder.joinpath(file)
                 _api_app.add_api(file_path)
 
+
 def register_extensions(app):
     """
     It register all extensions

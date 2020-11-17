@@ -7,31 +7,6 @@ servers:
 - url: /
 
 paths:
-  /my_restaurant:
-    post:
-      summary: Get current logged owner's restaurant
-      operationId: restaurants.resources.restaurants.my_restaurant
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                user_id:
-                  type: string
-              required:
-                - user_id
-      responses:
-        302: # TODO: change
-          description: Redirects to /restaurants/details/<user_id>
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Restaurant'
-        400:
-          description: Owner id not linked to any restaurant
-          content: {}
   
   /restaurants/{restaurant_id}:
     get:
@@ -80,7 +55,7 @@ paths:
                   status:
                     type: string
                   message:
-                    type: string    
+                    type: string
         400:
           description: Restaurant_id is not linked to any restaurant
           content:
@@ -147,11 +122,11 @@ paths:
                 properties:
                   name:
                     type: string
-                  address:          
+                  address:
                     type: string
                   city:
                     type: string
-                  phone:          
+                  phone:
                     type: string
                   menu_type:
                     type: string
@@ -279,7 +254,7 @@ paths:
                 properties:
                   number:
                     type: integer
-                  max_capacity:          
+                  max_capacity:
                     type: integer
                 required:
                   - number
@@ -332,7 +307,7 @@ paths:
                 properties:
                   day:
                     type: string
-                  start_time:          
+                  start_time:
                     type: string
                   end_time:
                     type: string
@@ -459,11 +434,11 @@ paths:
               properties:
                 name:
                   type: string
-                address:          
+                address:
                   type: string
                 city:
                   type: string
-                phone:          
+                phone:
                   type: string
                 menu_type:
                   type: string
