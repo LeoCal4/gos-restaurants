@@ -72,7 +72,7 @@ def create_app():
         register_test_blueprints(app)
 
     # registering to api app all specifications
-    register_specifications(app)
+    register_specifications(api_app)
     
     return app
 
