@@ -10,6 +10,7 @@ from restaurants.models.restaurant import Restaurant, geolocator
 from restaurants.models.restaurant_availability import RestaurantAvailability
 from restaurants.models.restaurant_rating import RestaurantRating
 from restaurants.models.table import Table
+from datetime import datetime
 
 
 restaurants = Blueprint('restaurants', __name__)
@@ -54,14 +55,14 @@ def like_toggle(restaurant_id):
         user_id = json_data['user_id']
     except Exception as e:
         return jsonify({'status': 'Bad request',
-                        'message': 'The provided user_id is not valid.\n' + e 
+                        'message': 'The provided user_id is not valid.\n' + str(e) 
                         }), 400
 
     try:
         toggle_like(user_id, restaurant_id)
     except Exception as e:
         return jsonify({'status': 'Internal server error',
-                'message': 'Error in toggling the like.\n' + e
+                'message': 'Error in toggling the like.\n' + str(e)
                 }), 500
 
     return jsonify({'status': 'Success',
@@ -88,7 +89,7 @@ def post_add(id_op):
         menu_type = json_data['menu_type']
     except Exception as e:
         return jsonify({'status': 'Bad request',
-                        'message': 'The data provided were not correct.\n' + e
+                        'message': 'The data provided were not correct.\n' + str(e)
                         }), 400
     location = geolocator.geocode(address+" "+city)
     lat = 0
@@ -102,7 +103,7 @@ def post_add(id_op):
         RestaurantManager.create_restaurant(restaurant)
     except Exception as e:
         return jsonify({'status': 'Internal server error',
-                        'message': 'Error in saving the restaurant in the db.\n' + e
+                        'message': 'Error in saving the restaurant in the db.\n' + str(e)
                         }), 500
     return jsonify({'status': 'Success',
                     'message': 'Restaurant succesfully added'
@@ -123,15 +124,18 @@ def details(id_op):
         return jsonify({'status': 'Bad request',
                         'message': 'The operator has no restaurant'
                         }), 400
-    list_measure = restaurant.measures.split(',')[1:]
+    list_measure = restaurant.measures
     tables = TableManager.retrieve_by_restaurant_id(restaurant.id)
+    tables = [t.serialize() for t in tables]
     ava = restaurant.availabilities
+    times = [a.serialize() for a in ava]
     avg_stay = restaurant.avg_stay
     avg_stay = convert_avg_stay_format(avg_stay)
     return jsonify({'status': 'Success',
                     'message': 'The details were correctly loaded',
-                    'details': {'restaurant': restaurant.serialize(), 'tables': tables, 'times': ava,
-                                'avg_stay': avg_stay, 'list_measure': list_measure}
+                    'details': {'restaurant': restaurant.serialize(), 'tables': tables, 
+                                'times': times, 'avg_stay': avg_stay,
+                                'list_measure': list_measure}
                     }), 200
 
 
@@ -156,7 +160,7 @@ def add_tables(id_op, rest_id):
             table = Table(capacity=capacity, restaurant=restaurant)
             TableManager.create_table(table)
     except Exception as e:
-        return jsonify({'message': 'DB ERROR\n' + e,
+        return jsonify({'message': 'DB ERROR\n' + str(e),
                         'status': 'Internal Server Error'}), 500
         
     return jsonify({'message': 'Tables successfully added'}), 200
@@ -178,15 +182,19 @@ def add_time(id_op, rest_id):
         day = post_data.get('day')
         start_time = post_data.get('start_time')
         end_time = post_data.get('end_time')
+        start_time = datetime.strptime(start_time, '%H:%M:%S').time()
+        end_time = datetime.strptime(end_time, '%H:%M:%S').time()
     except Exception as e:
-        return jsonify({'message': 'Error during opening hours updating\n' + e,
+        print(start_time)
+        print(str(e))
+        return jsonify({'message': 'Error during opening hours updating\n' + str(e),
                         'status': 'Bad Request'
                         }), 400
     try:
         restaurant = RestaurantManager.retrieve_by_id(rest_id)
         validate_ava(restaurant, day, start_time, end_time)
     except Exception as e:
-        return jsonify({'message': 'DB ERROR\n' + e,
+        return jsonify({'message': 'DB ERROR\n' + str(e),
                         'status': 'Internal Server Error'
                         }), 500
     return jsonify({'message': 'Opening Hours updated',
@@ -214,13 +222,13 @@ def add_measure(id_op, rest_id):
         string = ','.join(list_measure)
         restaurant.set_measures(string)
     except Exception as e:
-        return jsonify({'message': 'Invalid json data\n' + e,
+        return jsonify({'message': 'Invalid json data\n' + str(e),
                         'status': 'Bad Request'
                         }), 400
     try:
         RestaurantManager.update_restaurant(restaurant)
     except Exception as e:
-        return jsonify({'message': 'DB ERROR\n' + e,
+        return jsonify({'message': 'DB ERROR\n' + str(e),
                         'status': 'Internal Server Error'
                         }), 500
     return jsonify({'message': 'Measure added successfully',
@@ -247,13 +255,13 @@ def add_avg_stay(id_op, rest_id):
         minute = (hours * 60) + minute
         restaurant.set_avg_stay(minute)
     except Exception as e:
-        return jsonify({'message': 'Invalid json data\n' + e,
+        return jsonify({'message': 'Invalid json data\n' + str(e),
                         'status': 'Bad request'
                         }), 400
     try:
         RestaurantManager.update_restaurant(restaurant)
     except Exception as e:
-        return jsonify({'message': 'Error during avg stay updating\n' + e,
+        return jsonify({'message': 'Error during avg stay updating\n' + str(e),
                         'status': 'Internal Server Error'
                         }), 500
     return jsonify({'message': 'Average stay time successfully added'
@@ -284,13 +292,13 @@ def post_edit_restaurant(id_op, rest_id):
         menu_type = json_data['menu_type']
         restaurant.set_menu_type(menu_type)
     except Exception as e:
-        return jsonify({'message': 'Invalid json data\n' + e,
+        return jsonify({'message': 'Invalid json data\n' + str(e),
                         'status': 'Bad request'
                         }), 400
     try:
         RestaurantManager.update_restaurant(restaurant)
     except Exception as e:
-        return jsonify({'message': 'Error during restaurant updating\n' + e,
+        return jsonify({'message': 'Error during restaurant updating\n' + str(e),
                         'status': 'Internal Server Error'
                         }), 500
     return jsonify({'status': 'Success',
@@ -314,7 +322,7 @@ def convert_avg_stay_format(avg_stay):
         avg_stay = "%dH:%dM" % (h_avg_stay, m_avg_stay)
     else:
         avg_stay = 0
-    return avg_stay
+    return str(avg_stay)
 
 
 def validate_ava(restaurant, day, start_time, end_time):

@@ -33,7 +33,7 @@ paths:
                   - message
                   - restaurant_sheet
                 properties:
-                  resturant_sheet:
+                  restaurant_sheet:
                     type: object
                     required:
                       - restaurant
@@ -62,7 +62,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
-  
+
   /restaurants/like/{restaurant_id}:
     post:
       tags:

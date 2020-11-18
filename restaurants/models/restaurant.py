@@ -59,7 +59,12 @@ class Restaurant(db.Model):
     likes = relationship('Like', back_populates='restaurant')
 
     def serialize(self):
-        return dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
+        attributes_dict = dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
+        attributes_dict['tables'] = [t.serialize() for t in self.tables]
+        attributes_dict['availabilities'] = [a.serialize() for a in self.availabilities]
+        attributes_dict['ratings'] = [r.serialize() for r in self.ratings]
+        attributes_dict['likes'] = [l.serialize() for l in self.likes]
+        return attributes_dict
 
     def __init__(self, name, address, city, lat, lon, phone, menu_type):
         Restaurant.check_phone_number(phone)
