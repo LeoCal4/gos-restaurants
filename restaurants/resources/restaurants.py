@@ -131,6 +131,7 @@ def details(id_op):
     times = [a.serialize() for a in ava]
     avg_stay = restaurant.avg_stay
     avg_stay = convert_avg_stay_format(avg_stay)
+    print(type(restaurant))
     return jsonify({'status': 'Success',
                     'message': 'The details were correctly loaded',
                     'details': {'restaurant': restaurant.serialize(), 'tables': tables, 
@@ -141,7 +142,7 @@ def details(id_op):
 
 def add_tables(id_op, rest_id):
     """This method gives the operator the possibility to add tables to his restaurant
-        Linked to /restaurants/save_tables/<id_op>/<rest_id> [POST]
+        Linked to /restaurants/add_tables/<id_op>/<rest_id> [POST]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
@@ -150,7 +151,10 @@ def add_tables(id_op, rest_id):
         Invalid request if the tables data are not valid
         Tables successfully added otherwise
     """
-    restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
+    restaurant = RestaurantManager.retrieve_by_id(rest_id)
+    if restaurant is None:
+        return jsonify({'message': 'No restaurant with this id',
+                        'status': 'Bad Request'}), 400
 
     post_data = request.get_json()
     num_tables = post_data.get('number')
@@ -168,22 +172,25 @@ def add_tables(id_op, rest_id):
 
 def add_time(id_op, rest_id):
     """This method gives the operator the possibility to add opening hours to his restaurant
-        Linked to /restaurants/save_time/<int:id_op>/<int:rest_id> [POST]
+        Linked to /restaurants/add_time/<int:id_op>/<int:rest_id> [POST]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
     Returns:
 
     """
-    restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
-
+    restaurant = RestaurantManager.retrieve_by_id(rest_id)
+    if restaurant is None:
+        print(restaurant)
+        return jsonify({'message': 'No restaurant with this id',
+                        'status': 'Bad Request'}), 400
     post_data = request.get_json()
     try:
         day = post_data.get('day')
         start_time = post_data.get('start_time')
         end_time = post_data.get('end_time')
-        start_time = datetime.strptime(start_time, '%H:%M:%S').time()
-        end_time = datetime.strptime(end_time, '%H:%M:%S').time()
+        start_time = datetime.strptime(start_time, '%H:%M').time()
+        end_time = datetime.strptime(end_time, '%H:%M').time()
     except Exception as e:
         print(start_time)
         print(str(e))
@@ -204,7 +211,7 @@ def add_time(id_op, rest_id):
 def add_measure(id_op, rest_id):
     """This method gives the operator the possibility to add precaution meausures 
     to his restaurant
-        Linked to /restaurants/save_measure/<id_op>/<rest_id> [POST]
+        Linked to /restaurants/add_measure/<id_op>/<rest_id> [POST]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
@@ -212,7 +219,10 @@ def add_measure(id_op, rest_id):
     Returns:
 
     """
-    restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
+    restaurant = RestaurantManager.retrieve_by_id(rest_id)
+    if restaurant is None:
+        return jsonify({'message': 'No restaurant with this id',
+                        'status': 'Bad Request'}), 400
     post_data = request.get_json()
     try:
         measure = post_data.get('measure')
@@ -239,7 +249,7 @@ def add_measure(id_op, rest_id):
 def add_avg_stay(id_op, rest_id):
     """This method gives the operator the possibility to add the average
     stay time to his restaurant
-        Linked to /restaurants/save_avg_time/<id_op>/<rest_id> [POST]
+        Linked to /restaurants/add_avg_stay/<id_op>/<rest_id> [POST]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
@@ -247,9 +257,12 @@ def add_avg_stay(id_op, rest_id):
     Returns:
 
     """
-    restaurant = RestaurantManager.retrieve_by_operator_id(id_op)
-    post_data = request.get_json()
+    restaurant = RestaurantManager.retrieve_by_id(rest_id)
+    if restaurant is None:
+        return jsonify({'message': 'No restaurant with this id',
+                        'status': 'Bad Request'}), 400
     try:
+        post_data = request.get_json()
         hours = post_data.get('hours')
         minute = post_data.get('minutes')
         minute = (hours * 60) + minute
@@ -280,6 +293,9 @@ def post_edit_restaurant(id_op, rest_id):
     """
     json_data = request.get_json()
     restaurant = RestaurantManager.retrieve_by_id(rest_id)
+    if restaurant is None:
+        return jsonify({'message': 'No restaurant with this id',
+                        'status': 'Bad Request'}), 400    
     try:
         name = json_data['name']
         restaurant.set_name(name)
@@ -309,6 +325,9 @@ def post_edit_restaurant(id_op, rest_id):
 ##### Helper methods #####
 
 def toggle_like(user_id, restaurant_id):
+    restaurant = RestaurantManager.retrieve_by_id(restaurant_id)
+    if restaurant is None:
+        raise ValueError
     if LikeManager.like_exists(user_id, restaurant_id):
         LikeManager.delete_like(user_id, restaurant_id)
     else:
