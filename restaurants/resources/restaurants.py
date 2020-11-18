@@ -189,11 +189,9 @@ def add_time(id_op, rest_id):
         day = post_data.get('day')
         start_time = post_data.get('start_time')
         end_time = post_data.get('end_time')
-        start_time = datetime.strptime(start_time, '%H:%M').time()
-        end_time = datetime.strptime(end_time, '%H:%M').time()
+        start_time = datetime.strptime(start_time, '%H:%M:%S').time()
+        end_time = datetime.strptime(end_time, '%H:%M:%S').time()
     except Exception as e:
-        print(start_time)
-        print(str(e))
         return jsonify({'message': 'Error during opening hours updating\n' + str(e),
                         'status': 'Bad Request'
                         }), 400
