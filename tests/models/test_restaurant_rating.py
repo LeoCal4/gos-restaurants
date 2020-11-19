@@ -7,7 +7,7 @@ from .model_test import ModelTest
 
 
 class TestRestaurantRating(ModelTest):
-    fake = Faker()
+    faker = Faker()
 
     @classmethod
     def setUpClass(cls):
@@ -31,16 +31,18 @@ class TestRestaurantRating(ModelTest):
             customer_id = randint(0, 999)
         
         value = randint(RestaurantRating.MIN_VALUE, RestaurantRating.MAX_VALUE)
-        review = TestRestaurantRating.fake.text(max_nb_chars=RestaurantRating.REVIEW_MAX_LENGTH)
+        review = TestRestaurantRating.faker.text(max_nb_chars=RestaurantRating.REVIEW_MAX_LENGTH)
+        customer_name = TestRestaurantRating.faker.first_name()
 
         restaurant_rating = RestaurantRating(
             customer_id=customer_id,
             restaurant_id=restaurant.id,
+            customer_name=customer_name,
             value=value,
             review=review
         )
 
-        return restaurant_rating, (customer_id, restaurant, value, review)
+        return restaurant_rating, (customer_id, customer_name, restaurant.id, value, review)
 
     
     @staticmethod
@@ -48,17 +50,19 @@ class TestRestaurantRating(ModelTest):
         t = unittest.FunctionTestCase(TestRestaurantRating)
         t.assertEqual(r1.customer_id, r2.customer_id)
         t.assertEqual(r1.restaurant_id, r2.restaurant_id)
+        t.assertEqual(r1.customer_name, r2.customer_name)
         t.assertEqual(r1.value, r2.value)
         t.assertEqual(r1.review, r2.review)
 
     def test_init(self):
         for _ in range(0, 10):
-            restaurant_rating, (customer_id, restaurant, value, review) = TestRestaurantRating.generate_random_rating()
+            restaurant_rating, (customer_id, customer_name, restaurant_id, value, review) = TestRestaurantRating.generate_random_rating()
 
             self.assertEqual(restaurant_rating.review, review)
             self.assertEqual(restaurant_rating.value, value)
             self.assertEqual(restaurant_rating.customer_id, customer_id)
-            self.assertEqual(restaurant_rating.restaurant_id, restaurant.id)
+            self.assertEqual(restaurant_rating.customer_name, customer_name)
+            self.assertEqual(restaurant_rating.restaurant_id, restaurant_id)
 
     def test_value(self):
         from restaurants.models.restaurant_rating import RestaurantRating
@@ -94,5 +98,5 @@ class TestRestaurantRating(ModelTest):
 
         for _ in range(0, 10):
             restaurant_rating, _ = TestRestaurantRating.generate_random_rating()
-            text = textwrap.shorten(TestRestaurantRating.fake.text(), RestaurantRating.REVIEW_MAX_LENGTH-1)
+            text = textwrap.shorten(TestRestaurantRating.faker.text(), RestaurantRating.REVIEW_MAX_LENGTH-1)
             restaurant_rating.set_review(text)

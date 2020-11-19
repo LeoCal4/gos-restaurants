@@ -27,7 +27,7 @@ class RestaurantRating(db.Model):
     restaurant = relationship('Restaurant', back_populates='ratings')
 
     value = db.Column(
-        db.SmallInteger,
+        db.Integer,
         nullable=False
     )
 
@@ -40,10 +40,11 @@ class RestaurantRating(db.Model):
 
     timestamp = db.Column(db.DateTime, default=datetime.datetime.utcnow)
 
-    def __init__(self, customer_id, restaurant_id, value: int, review=None):
+    def __init__(self, customer_id, restaurant_id, customer_name, value, review=None):
         self.customer_id = customer_id
         self.restaurant_id = restaurant_id
-        self.value = value
+        self.customer_name = customer_name
+        self.value = value[0] # for some unknown reason value is tuple
         self.review = review
 
     @staticmethod
@@ -66,3 +67,8 @@ class RestaurantRating(db.Model):
 
     def get_how_long_ago(self):
         return timeago.format(datetime.datetime.now(), self.timestamp)
+
+    def serialize(self):
+        att_dict = dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
+        att_dict['timestamp'] = self.get_how_long_ago()
+        return att_dict
