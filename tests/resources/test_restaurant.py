@@ -114,8 +114,8 @@ class RestaurantResTest(ResourceTest):
         start_time = time(hour=self.faker.random_int(min=0, max=12), minute=self.faker.random_int(min=0, max=59))
         end_time = time(hour=self.faker.random_int(min=13, max=23), minute=self.faker.random_int(min=0, max=59))
         data = {'day': 'Monday',
-                'start_time': start_time.strftime('%H:%M'),
-                'end_time': end_time.strftime('%H:%M')}
+                'start_time': start_time.strftime('%H:%M:%S'),
+                'end_time': end_time.strftime('%H:%M:%S')}
         response = self.client.post('/restaurants/add_time/'+ str(id_operator) + '/' + str(restaurant.id), json=data)
         assert response.status_code == 200
     
@@ -150,7 +150,6 @@ class RestaurantResTest(ResourceTest):
         minutes = self.faker.random_int(min=1, max=59)
         data = {'hours' : hours,
                 'minutes': minutes}
-        print("MUSCAAAAAAAAAAAAA")
         response = self.client.post('/restaurants/add_avg_stay/'+ str(id_operator) + '/' + str(restaurant.id), json=data)
         json_response = response.json
         print(json_response)
@@ -170,6 +169,17 @@ class RestaurantResTest(ResourceTest):
         json_response = response.json
         assert response.status_code == 200
 
+    def test_delete_restaurant_400(self):
+        response = self.client.delete('restaurant/delete/' + str(0) + '/' + str(0))
+        assert response.status_code == 400
+
+    def test_delete_restaurant_200(self):
+        restaurant, id_operator, _ = self.add_restaurant()
+        response = self.client.delete('restaurant/delete/' + str(id_operator) + '/' + str(restaurant.id))
+        restaurant = self.restaurant_manager.retrieve_by_id(restaurant.id)
+        self.assertIsNone(restaurant)
+        assert response.status_code == 200
+        
     #Tests on Helper Methods
 
     def test_toggle_like(self):
@@ -178,7 +188,7 @@ class RestaurantResTest(ResourceTest):
     def test_convert_avg_stay_fromat_0(self):
         from restaurants.resources.restaurants import convert_avg_stay_format
         avg_stay = None
-        self.assertEqual(0, convert_avg_stay_format(avg_stay))
+        self.assertEqual('0', convert_avg_stay_format(avg_stay))
 
     def test_convert_avg_stay_fromat(self):
         from restaurants.resources.restaurants import convert_avg_stay_format
@@ -208,11 +218,12 @@ class RestaurantResTest(ResourceTest):
     #Helper method
     def add_restaurant(self):
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
+        id_operator = self.faker.random_int(min=0, max=50000)
+        restaurant.owner_id = id_operator
         self.restaurant_manager.create_restaurant(restaurant)       
         data = {'name': restaurant.name,
                 'address': restaurant.address,
                 'city':  restaurant.city,
                 'phone': restaurant.phone,
                 'menu_type': restaurant.menu_type}
-        id_operator = self.faker.random_int(min=0, max=50000)
         return restaurant, id_operator, data

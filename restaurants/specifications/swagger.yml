@@ -454,6 +454,32 @@ paths:
         400:
           description: Can't modify restaurant
           content: {}
+  
+  /restaurant/delete/{id_op}/{rest_id}:
+    delete:
+      tags:
+        - Restaurants
+      summary: Edits the restaurant specified by the rest_id  
+      operationId: restaurants.resources.restaurants.delete_restaurant
+      parameters:
+      - name: id_op
+        in: path
+        description: Operator's Unique identifier
+        required: true
+        schema:
+          type: integer
+      - name: rest_id
+        in: path
+        description: Restaurant's unique identifier
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Restaurant correctly deleted
+        400:
+          description: Can't delete restaurant
+          content: {}
 
 components:
   schemas:
