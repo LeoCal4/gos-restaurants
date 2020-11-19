@@ -356,6 +356,31 @@ def post_edit_restaurant(id_op, rest_id):
                     'message': 'Restaurant correctly modified'
                     }), 200
 
+def delete_restaurant(id_op, rest_id):
+    """This method allows the operator to delete the restaurant
+        Linked to /restaurant/delete/{id_op}/{rest_id} [DELETE]
+    Args:
+        id_op (int): univocal identifier of the operator
+        rest_id (int): univocal identifier of the restaurant
+
+    Returns:
+        Invalid request if the restaurant are not valid
+        Restaurant successfully deleted
+    """
+    restaurant = RestaurantManager.retrieve_by_id(rest_id)
+    if restaurant is None:
+        return jsonify({'message': 'No restaurant with this id',
+                        'status': 'Bad Request'}), 400
+    try:
+        RestaurantManager.delete_restaurant(restaurant)
+    except Exception as e:
+        return jsonify({'message': 'Error during avg stay updating\n' + str(e),
+                        'status': 'Internal Server Error'
+                        }), 500
+    return jsonify({'message': 'Restaurant successfully deleted'
+                    }), 200
+
+
 
 def add_review():
     """This method allows a customer to leave a review in a restaurant that he has been in.
