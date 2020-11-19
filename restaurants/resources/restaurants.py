@@ -37,9 +37,46 @@ def restaurant_sheet(restaurant_id):
     return jsonify({'status': 'Success',
                     'message': 'The restaurant details have been correctly fetched',
                     'restaurant_sheet': {'restaurant': restaurant.serialize(), 'list_measures': list_measure, 
-                                        'average_rate': average_rate, 'max_rate': RestaurantRating.MAX_VALUE}
+                                        'average_rate': average_rate, 'max_rate': RestaurantRating.MAX_VALUE,
+                                        'is_open': restaurant.is_open_date()}
                     }), 200
 
+def get_all_restaurants():
+    """This method returns a all restaurant
+        Linked to route /restaurants/get_all [GET]
+    Returns:
+        Bad request
+        Internal server error
+        A json including all the restaurants
+    """
+    restaurants = RestaurantManager.retrieve_all()
+    if restaurants is None:
+        return jsonify({'status': 'Bad request',
+                        'message': 'Can\'t get any restaurant'
+                        }), 500
+    restaurants = [r.serialize() for r in restaurants]
+    return jsonify({'status': 'Success',
+                    'message': 'All the restaurants have been correctly retrieved',
+                    'restaurants': restaurants
+                    }), 200
+
+def search_by(search_filter, search_field):
+    if search_filter == "Name":
+        restaurants = RestaurantManager.retrieve_by_restaurant_name(search_field)
+    elif search_filter == "City":
+        restaurants = RestaurantManager.retrieve_by_restaurant_city(search_field)
+    elif search_filter == "Menu Type":
+        restaurants = RestaurantManager.retrieve_by_menu_type(search_field)
+    
+    if restaurants is None:
+        return jsonify({'status': 'Bad request',
+                        'message': 'Can\'t get any restaurant'
+                        }), 400
+    restaurants = [r.serialize() for r in restaurants]
+    return jsonify({'status': 'Success',
+                    'message': 'The restaurant have been retrieved according to the specified search',
+                    'restaurants': restaurants
+                    }), 200
 
 def like_toggle(restaurant_id):
     """Updates the like count
@@ -318,6 +355,55 @@ def post_edit_restaurant(id_op, rest_id):
     return jsonify({'status': 'Success',
                     'message': 'Restaurant correctly modified'
                     }), 200
+
+
+def add_review():
+    """This method allows a customer to leave a review in a restaurant that he has been in.
+    Only one review is possible.
+        Linked to /restaurants/review [POST]
+
+    """
+    json_data = request.get_json()
+    try:
+        restaurant_id = json_data['restaurant_id']
+        user_id = json_data['user_id']
+        user_name = json_data['user_name']
+        value = json_data['value'],
+        review = json_data['review']
+    except Exception as e:
+        return jsonify({'message': 'Invalid json data\n' + str(e),
+                        'status': 'Bad request'
+                        }), 400
+    if RestaurantRatingManager.check_existence(restaurant_id, user_id):
+        return jsonify({'status': 'Success',
+                'message': 'Review already added',
+                'already_written': True
+                }), 200
+    else:
+        rest_rating = RestaurantRating(
+            user_id,
+            restaurant_id,
+            user_name,
+            value,
+            review
+        )
+        RestaurantRatingManager.create_rating(rest_rating)
+        return jsonify({'status': 'Success',
+                        'message': 'Review correctly added',
+                        'already_written': False
+                        }), 201
+
+
+def get_rating_bounds():
+    """This method allows a customer to leave a review in a restaurant that he has been in.
+    Only one review is possible.
+        Linked to /restaurants/rating_bounds [GET]
+
+    """
+    return jsonify({'status': 'Success',
+            'message': 'Review already written',
+            'bounds': {'min_value': RestaurantRating.MIN_VALUE, 'max_value': RestaurantRating.MAX_VALUE}
+            }), 200
 
 
 ##### Helper methods #####

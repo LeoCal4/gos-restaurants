@@ -40,6 +40,7 @@ paths:
                       - list_measures
                       - average_rate
                       - max_rate
+                      - is_open
                     properties:
                       restaurant:
                         $ref: '#/components/schemas/Restaurant'
@@ -52,12 +53,94 @@ paths:
                       max_rate:
                         description: Max rating of the restaurant
                         type: integer
+                      is_open:
+                        description: The restaurant is open or not
+                        type: boolean
                   status:
                     type: string
                   message:
                     type: string
         400:
           description: Restaurant_id is not linked to any restaurant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /restaurants/get_all:
+    get:
+      tags:
+      - Restaurants
+      summary: Get all restaurant
+      operationId: restaurants.resources.restaurants.get_all_restaurants
+      responses:
+        200:
+          description: Return all restaurants
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - restaurants
+                properties:
+                  restaurants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Restaurant'
+                  status:
+                    type: string
+                  message:
+                    type: string
+        500:
+          description: Error in retrieving all restaurants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /restaurants/search_by/{search_filter}/{search_field}:
+    get:
+      tags:
+      - Restaurants
+      summary: Get the restaurant included in the specified search
+      operationId: restaurants.resources.restaurants.search_by
+      parameters:
+      - name: search_filter
+        in: path
+        description: Search filter chosen among the one proposed
+        required: true
+        schema:
+          type: string
+      - name: search_field
+        in: path
+        description: Search field inserted by the user
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: Return all restaurants from the specified search
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - restaurants
+                properties:
+                  restaurants:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Restaurant'
+                  status:
+                    type: string
+                  message:
+                    type: string
+        400:
+          description: Error in retrieving the restaurants 
           content:
             application/json:
               schema:
@@ -77,7 +160,7 @@ paths:
                 type: object
                 properties:
                   user_id:
-                    type: string
+                    type: integer
                 required:
                   - user_id
       parameters:
@@ -361,11 +444,18 @@ paths:
                   - measure
       responses:
         200:
-          description: Measure successfully added
+          description: Measure correctly added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
         400:
-          description: Can't add new measure
-          content: {}
-  
+          description: Can't add measure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
   /restaurants/add_avg_stay/{id_op}/{rest_id}:
     post:
       tags:
@@ -402,9 +492,16 @@ paths:
       responses:
         200:
           description: Average stay time successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
         400:
           description: Can't add new average stay time
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
           
   /edit_restaurant/{id_op}/{rest_id}:
     post:
@@ -451,9 +548,122 @@ paths:
       responses:
         200:
           description: Restaurant correctly modified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
         400:
           description: Can't modify restaurant
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /restaurants/review:
+    post:
+      tags:
+        - Restaurants
+      summary: Edits the restaurant specified by the rest_id  
+      operationId: restaurants.resources.restaurants.add_review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                restaurant_id:
+                  type: integer
+                user_id:
+                  type: integer
+                user_name:
+                  type: string
+                value:
+                  type: integer
+                review:
+                  type: string
+              required:
+                - restaurant_id
+                - user_id
+                - user_name
+                - value
+                - review
+      responses:
+        200:
+          description: Review already added
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - already_written
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  details:
+                    type: boolean
+        201:
+          description: Review correctly added
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - already_written
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+                  details:
+                    type: boolean
+        400:
+          description: Can't modify restaurant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /restaurants/rating_bounds:
+    get:
+      tags:
+      - Restaurants
+      summary: Get the min and the max bounds for the ratings
+      operationId: restaurants.resources.restaurants.get_rating_bounds
+      responses:
+        200:
+          description: Return restaurant
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - bounds
+                properties:
+                  bounds:
+                    type: object
+                    required:
+                      - min_value
+                      - max_value
+                    properties:
+                      min_value:
+                        description: Min value for the rating of a restaurant
+                        type: integer
+                      max_value:
+                        description: Max value for the rating of a restaurant
+                        type: integer
+                  status:
+                    type: string
+                  message:
+                    type: string
 
 components:
   schemas:
