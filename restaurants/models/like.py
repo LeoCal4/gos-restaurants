@@ -31,3 +31,6 @@ class Like(db.Model):
 
     def __init__(self, *args, **kw):
         super(Like, self).__init__(*args, **kw)
+    
+    def serialize(self):
+        return dict([(k,v) for k,v in self.__dict__.items() if k[0] != '_'])
