@@ -1,0 +1,12 @@
+-r requirements.txt
+progress==1.5
+py==1.9.0
+pyparsing==2.4.6
+pyrsistent==0.17.3
+pytest==6.1.2
+pytest-cov==2.10.1
+pytest-cover==3.0.0
+pytest-coverage==0.0
+Faker==4.14.2
+coverage==5.3
+codecov==2.1.10

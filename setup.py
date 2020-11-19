@@ -9,7 +9,7 @@ _version_re = re.compile(r"__version__\s+=\s+(.*)")
 
 PROJECT = "gos-restaurants"
 
-with open(PROJECT + "/__init__.py", "rb") as f:
+with open(PROJECT + "/consumers.py", "rb") as f:
     version = str(
         ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
     )

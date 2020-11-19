@@ -1,0 +1,35 @@
+#
+# Flask Configuration
+#
+#------------------------
+FLASK_ENV=production
+
+#
+# Postgres configuration
+#
+#------------------------
+#
+# POSTGRES_HOST=
+#
+POSTGRES_PASSWORD=abcd
+POSTGRES_USER=gos_users_ms
+POSTGRES_DB=gos_users_ms
+
+#
+# Rabbit MQ configuration for
+# rabbitmq container
+#
+#------------------------
+RABBITMQ_DEFAULT_VHOST=gos
+
+#
+# Rabbit MQ configuration
+# for worker node
+#
+#------------------------
+#
+# RABBIT_MQ_HOST=
+#
+RABBIT_MQ_PORT=5672
+RABBIT_MQ_VHOST=gos
+RABBIT_MQ_SEND_EXCHANGE_NAME=gos
