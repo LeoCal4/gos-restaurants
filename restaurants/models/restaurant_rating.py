@@ -44,7 +44,7 @@ class RestaurantRating(db.Model):
         self.customer_id = customer_id
         self.restaurant_id = restaurant_id
         self.customer_name = customer_name
-        self.value = value[0] # for some unknown reason value is tuple
+        self.value = value[0] if type(value) == tuple else value # for some unknown reason value is a tuple (sometimes)
         self.review = review
 
     @staticmethod

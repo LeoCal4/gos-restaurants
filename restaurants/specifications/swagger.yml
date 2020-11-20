@@ -574,9 +574,9 @@ paths:
               properties:
                 restaurant_id:
                   type: integer
-                user_id:
+                customer_id:
                   type: integer
-                user_name:
+                customer_name:
                   type: string
                 value:
                   type: integer
@@ -584,8 +584,8 @@ paths:
                   type: string
               required:
                 - restaurant_id
-                - user_id
-                - user_name
+                - customer_id
+                - customer_name
                 - value
                 - review
       responses:
@@ -665,7 +665,7 @@ paths:
                   message:
                     type: string
   
-  /restaurant/delete/{id_op}/{rest_id}:
+  /restaurants/delete/{id_op}/{rest_id}:
     delete:
       tags:
         - Restaurants

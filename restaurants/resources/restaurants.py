@@ -168,7 +168,6 @@ def details(id_op):
     times = [a.serialize() for a in ava]
     avg_stay = restaurant.avg_stay
     avg_stay = convert_avg_stay_format(avg_stay)
-    print(type(restaurant))
     return jsonify({'status': 'Success',
                     'message': 'The details were correctly loaded',
                     'details': {'restaurant': restaurant.serialize(), 'tables': tables, 
@@ -358,7 +357,7 @@ def post_edit_restaurant(id_op, rest_id):
 
 def delete_restaurant(id_op, rest_id):
     """This method allows the operator to delete the restaurant
-        Linked to /restaurant/delete/{id_op}/{rest_id} [DELETE]
+        Linked to /restaurants/delete/{id_op}/{rest_id} [DELETE]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
@@ -391,24 +390,24 @@ def add_review():
     json_data = request.get_json()
     try:
         restaurant_id = json_data['restaurant_id']
-        user_id = json_data['user_id']
-        user_name = json_data['user_name']
+        customer_id = json_data['customer_id']
+        customer_name = json_data['customer_name']
         value = json_data['value'],
         review = json_data['review']
     except Exception as e:
         return jsonify({'message': 'Invalid json data\n' + str(e),
                         'status': 'Bad request'
                         }), 400
-    if RestaurantRatingManager.check_existence(restaurant_id, user_id):
+    if RestaurantRatingManager.check_existence(restaurant_id, customer_id):
         return jsonify({'status': 'Success',
                 'message': 'Review already added',
                 'already_written': True
                 }), 200
     else:
         rest_rating = RestaurantRating(
-            user_id,
+            customer_id,
             restaurant_id,
-            user_name,
+            customer_name,
             value,
             review
         )
