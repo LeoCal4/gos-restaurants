@@ -1,11 +1,9 @@
 import os
 
-from flask import Flask
 from flask_environments import Environments
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 import connexion
-from connexion.resolver import RestyResolver
 
 __version__ = '0.1'
 
@@ -13,11 +11,13 @@ db = None
 migrate = None
 login = None
 debug_toolbar = None
+app = None
 
 
-def create_app():
+def create_app(rabbit_producer_enabled=True):
     """
     This method create the Flask application.
+    :param rabbit_producer_enabled this variable indicates if rabbit producer should be enabled or not.
     :return: Flask App Object
     """
     global db
@@ -29,7 +29,7 @@ def create_app():
         __name__,
         server='flask',
         specification_dir='openapi/')
-    
+
     # getting the flask app
     app = api_app.app
 
@@ -48,14 +48,25 @@ def create_app():
     env = Environments(app)
     env.from_object(config_object)
 
+    # loading communications
+    import restaurants.comm as comm
+
+    if flask_env == 'production':
+        # disable communication for testing purposes
+        comm.init_rabbit_conf(app)
+
+        if rabbit_producer_enabled:
+            comm.init_rabbit_mq(app)
+    else:
+        comm.disabled = True
+
     # registering db
     db = SQLAlchemy(
         app=app
     )
 
     # requiring the list of models
-    register_extensions(app)
-    register_blueprints(app)
+    import restaurants.models
 
     # creating migrate
     migrate = Migrate(
@@ -68,12 +79,9 @@ def create_app():
         # we need to populate the db
         db.create_all()
 
-    if flask_env == 'testing' or flask_env == 'development':
-        register_test_blueprints(app)
-
     # registering to api app all specifications
     register_specifications(api_app)
-    
+
     return app
 
 
@@ -92,41 +100,3 @@ def register_specifications(_api_app):
             if file.endswith('.yaml') or file.endswith('.yml'):
                 file_path = folder.joinpath(file)
                 _api_app.add_api(file_path)
-
-
-def register_extensions(app):
-    """
-    It register all extensions
-    :param app: Flask Application Object
-    :return: None
-    """
-    global debug_toolbar
-
-    if app.debug:
-        try:
-            from flask_debugtoolbar import DebugToolbarExtension
-            debug_toolbar = DebugToolbarExtension(app)
-        except ImportError:
-            pass
-
-
-def register_blueprints(app):
-    """
-    This function registers all resources in the flask application
-    :param app: Flask Application Object
-    :return: None
-    """
-    from restaurants.resources import blueprints
-    for bp in blueprints:
-        app.register_blueprint(bp, url_prefix='/')
-
-
-def register_test_blueprints(app):
-    """
-    This function registers the blueprints used only for testing purposes
-    :param app: Flask Application Object
-    :return: None
-    """
-
-    from restaurants.resources.utils import utils
-    app.register_blueprint(utils)

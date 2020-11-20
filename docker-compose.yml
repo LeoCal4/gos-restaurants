@@ -1,59 +1,55 @@
 version: "3"
 services:
-  base:
+  worker_base:
     build: .
-    volumes:
-      - .:/code
+    env_file:
+      - env_file
+    environment:
+      - POSTGRES_HOST=db
+      - RABBIT_MQ_HOST=rabbit_mq
     command: 'false'
 
-  web:
+  app_worker:
+    restart: always
     extends:
-      service: base
-    command: flask run --host=0.0.0.0
-    env_file:
-      - env_file
+      service: worker_base
+    command: gunicorn --config gunicorn.conf.py wsgi:app
     ports:
-      - "5000:5000"
+    - "5000:5000"
     depends_on:
       - db
+      - rabbit_mq
+      - migrations
 
-  celery:
+  bg_worker:
+    restart: on-failure
     extends:
-      service: base
-    command: /bin/bash celery_entry.sh
+      service: worker_base
+    command: python background.py
+    depends_on:
+      - db
+      - rabbit_mq
+      - migrations
+
+  rabbit_mq:
+    image: library/rabbitmq:3.6-management
+    ports:
+    - "5672:5672"
+    - "15672:15672"
     env_file:
       - env_file
-    depends_on:
-      - redis
-
-  redis:
-    image: redis
-    restart: on-failure
-    ports:
-      - "6379:6379/tcp"
 
   db:
     image: postgres:10
-    restart: always
+    restart: on-failure
     env_file:
       - env_file
-    ports:
-      - "5432:5432"
 
   migrations:
     extends:
-      service: base
-    env_file:
-      - env_file
+      service: worker_base
     command: flask db upgrade
+    restart: on-failure
     depends_on:
       - db
-
-  example_data_loader:
-    extends:
-      service: base
-    env_file:
-      - env_file
-    command: python load_example_data.py
-    depends_on:
-      - db
+      - rabbit_mq
