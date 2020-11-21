@@ -1,6 +1,6 @@
 # GoOutSafe - Restaurants - Messages
 
-This microservice listen to Message Broker for
+This microservice listens to Message Broker for
 the following messages:
 
 |Route Key        | Action performed         |

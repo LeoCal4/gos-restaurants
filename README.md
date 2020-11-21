@@ -95,4 +95,3 @@ In order to know what are the lines of codes which are not covered by the tests,
 - Name of classes must be PascalCased 
 - Name of constants must be UPPERCASE 
 - The class name of managers must be in the format `<BeanName>Manager`
-
