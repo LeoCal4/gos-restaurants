@@ -109,13 +109,13 @@ paths:
       parameters:
       - name: search_filter
         in: path
-        description: Search filter chosen among the one proposed
+        description: Search field inserted by the user
         required: true
         schema:
           type: string
       - name: search_field
         in: path
-        description: Search field inserted by the user
+        description: Search filter chosen among the one proposed
         required: true
         schema:
           type: string
@@ -147,7 +147,7 @@ paths:
                 $ref: '#/components/schemas/Response'
 
   /restaurants/like/{restaurant_id}:
-    post:
+    put:
       tags:
       - Restaurants
       summary: Toggle the like on a restaurant
@@ -177,7 +177,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
-        400:
+        404:
           description: User id is not valid
           content:
             application/json:
@@ -302,7 +302,7 @@ paths:
                       list_measures:
                         description: String list of the security measures adopted by the restaurant
                         type: string
-        400:
+        404:
           description: The operator has no restaurant
           content:
             application/json:
@@ -413,7 +413,7 @@ paths:
                 $ref: '#/components/schemas/Response'
   
   /restaurants/add_measure/{id_op}/{rest_id}:
-    post:
+    put:
       tags:
         - Restaurants
       summary: Adds security measures to the restaurant specified by the rest_id
@@ -457,7 +457,7 @@ paths:
                 $ref: '#/components/schemas/Response'
 
   /restaurants/add_avg_stay/{id_op}/{rest_id}:
-    post:
+    put:
       tags:
         - Restaurants
       summary: Adds average stay time to the restaurant specified by the rest_id
@@ -504,11 +504,11 @@ paths:
                 $ref: '#/components/schemas/Response'
           
   /edit_restaurant/{id_op}/{rest_id}:
-    post:
+    put:
       tags:
         - Restaurants
       summary: Edits the restaurant specified by the rest_id  
-      operationId: restaurants.resources.restaurants.post_edit_restaurant
+      operationId: restaurants.resources.restaurants.put_edit_restaurant
       parameters:
       - name: id_op
         in: path

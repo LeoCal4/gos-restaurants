@@ -61,12 +61,13 @@ def get_all_restaurants():
                     }), 200
 
 def search_by(search_filter, search_field):
-    if search_filter == "Name":
-        restaurants = RestaurantManager.retrieve_by_restaurant_name(search_field)
-    elif search_filter == "City":
-        restaurants = RestaurantManager.retrieve_by_restaurant_city(search_field)
-    elif search_filter == "Menu Type":
-        restaurants = RestaurantManager.retrieve_by_menu_type(search_field)
+    restaurants = None
+    if search_field == "Name":
+        restaurants = RestaurantManager.retrieve_by_restaurant_name(search_filter)
+    elif search_field == "City":
+        restaurants = RestaurantManager.retrieve_by_restaurant_city(search_filter)
+    elif search_field == "Menu Type":
+        restaurants = RestaurantManager.retrieve_by_menu_type(search_filter)
     
     if restaurants is None:
         return jsonify({'status': 'Bad request',
@@ -80,7 +81,7 @@ def search_by(search_filter, search_field):
 
 def like_toggle(restaurant_id):
     """Updates the like count
-        Linked ot /restaurants/like/<restaurant_id> [POST]
+        Linked ot /restaurants/like/<restaurant_id> [PUT]
     Args:
         restaurant_id (int): univocal identifier of the restaurant
 
@@ -93,7 +94,7 @@ def like_toggle(restaurant_id):
     except Exception as e:
         return jsonify({'status': 'Bad request',
                         'message': 'The provided user_id is not valid.\n' + str(e) 
-                        }), 400
+                        }), 404
 
     try:
         toggle_like(user_id, restaurant_id)
@@ -245,7 +246,7 @@ def add_time(id_op, rest_id):
 def add_measure(id_op, rest_id):
     """This method gives the operator the possibility to add precaution meausures 
     to his restaurant
-        Linked to /restaurants/add_measure/<id_op>/<rest_id> [POST]
+        Linked to /restaurants/add_measure/<id_op>/<rest_id> [PUT]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
@@ -283,7 +284,7 @@ def add_measure(id_op, rest_id):
 def add_avg_stay(id_op, rest_id):
     """This method gives the operator the possibility to add the average
     stay time to his restaurant
-        Linked to /restaurants/add_avg_stay/<id_op>/<rest_id> [POST]
+        Linked to /restaurants/add_avg_stay/<id_op>/<rest_id> [PUT]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
@@ -315,9 +316,9 @@ def add_avg_stay(id_op, rest_id):
                     }), 200
 
 
-def post_edit_restaurant(id_op, rest_id):
+def put_edit_restaurant(id_op, rest_id):
     """This method allows the operator to edit the information about his restaurant
-        Linked to /edit_restaurant/<id_op>/<rest_id> [POST]
+        Linked to /edit_restaurant/<id_op>/<rest_id> [PUT]
     Args:
         id_op (int): univocal identifier of the operator
         rest_id (int): univocal identifier of the restaurant
