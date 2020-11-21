@@ -18,7 +18,10 @@ class RestaurantAvailability(db.Model):
     restaurant = relationship("Restaurant", back_populates="availabilities")
 
     def serialize(self):
-        return dict([(k,str(v)) for k,v in self.__dict__.items() if k[0] != '_'])
+        att_dict = dict([(k, v) for k,v in self.__dict__.items() if k[0] != '_'])
+        att_dict['start_time'] = str(self.start_time)
+        att_dict['end_time'] = str(self.end_time)
+        return att_dict
 
     def __init__(self, restaurant_id, day, start_time, end_time):
         self.restaurant_id = restaurant_id
