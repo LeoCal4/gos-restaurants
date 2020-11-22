@@ -18,7 +18,7 @@ class CustomerDeletionWorker(ConsumerMixin):
 
     def on_message(self, body, message):
         message.ack()
-        app.logging.info('Received a message of user deletion.')
+        app.logger.info('Received a message of user deletion.')
         print(body)
         """
         @TODO: delete the related restaurant
