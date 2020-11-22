@@ -31,13 +31,13 @@ def restaurant_sheet(restaurant_id):
                         'message': 'The provided restaurant_id is not linked to any restaurant'
                         }), 400
 
-    list_measure = restaurant.measures.split(',')[1:]
     average_rate = RestaurantRatingManager.calculate_average_rate(restaurant)
 
     return jsonify({'status': 'Success',
                     'message': 'The restaurant details have been correctly fetched',
-                    'restaurant_sheet': {'restaurant': restaurant.serialize(), 'list_measures': list_measure, 
-                                        'average_rate': average_rate, 'max_rate': RestaurantRating.MAX_VALUE,
+                    'restaurant_sheet': {'restaurant': restaurant.serialize(), 
+                                        'average_rate': average_rate,
+                                        'max_rate': RestaurantRating.MAX_VALUE,
                                         'is_open': restaurant.is_open_date()}
                     }), 200
 
@@ -162,7 +162,7 @@ def details(id_op):
         return jsonify({'status': 'Bad request',
                         'message': 'The operator has no restaurant'
                         }), 400
-    list_measure = restaurant.measures
+    list_measures = restaurant.measures
     tables = TableManager.retrieve_by_restaurant_id(restaurant.id)
     tables = [t.serialize() for t in tables]
     ava = restaurant.availabilities
@@ -173,7 +173,7 @@ def details(id_op):
                     'message': 'The details were correctly loaded',
                     'details': {'restaurant': restaurant.serialize(), 'tables': tables, 
                                 'times': times, 'avg_stay': avg_stay,
-                                'list_measure': list_measure}
+                                'list_measures': list_measures}
                     }), 200
 
 

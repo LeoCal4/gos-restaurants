@@ -8,6 +8,58 @@ servers:
 
 paths:
   
+  /restaurants:
+    post:
+      tags:
+      - Restaurants
+      summary: Creates restaurant
+      operationId: restaurants.resources.restaurants.post_add
+      requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  address:
+                    type: string
+                  city:
+                    type: string
+                  phone:
+                    type: string
+                  menu_type:
+                    type: string
+                  op_id:
+                    type: integer
+                required:
+                  - name
+                  - address
+                  - city
+                  - phone
+                  - menu_type
+                  - op_id
+      responses:
+        200:
+          description: Restaurant successfully added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        400:
+          description: Error in the data validation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        500:
+          description: Error in saving the restaurant in the db
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+  
   /restaurants/{restaurant_id}:
     get:
       tags:
@@ -37,16 +89,12 @@ paths:
                     type: object
                     required:
                       - restaurant
-                      - list_measures
                       - average_rate
                       - max_rate
                       - is_open
                     properties:
                       restaurant:
                         $ref: '#/components/schemas/Restaurant'
-                      list_measures:
-                        description: String list of the security measures adopted by the restaurant
-                        type: string
                       average_rate:
                         description: Average rate of the restaurant
                         type: number
@@ -66,8 +114,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Response'
+    put:
+      tags:
+        - Restaurants
+      summary: Edits the restaurant specified by the restaurant_id  
+      operationId: restaurants.resources.restaurants.put_edit_restaurant
+      parameters:
+      - name: restaurant_id
+        in: path
+        description: Restaurant's unique identifier
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: string
+                city:
+                  type: string
+                phone:
+                  type: string
+                menu_type:
+                  type: string
+              required:
+                - name
+                - address
+                - city
+                - phone
+                - menu_type
+      responses:
+        200:
+          description: Restaurant correctly modified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        400:
+          description: Can't modify restaurant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+    delete:
+      tags:
+        - Restaurants
+      summary: Edits the restaurant specified by the restaurant_id  
+      operationId: restaurants.resources.restaurants.delete_restaurant
+      parameters:
+      - name: restaurant_id
+        in: path
+        description: Restaurant's unique identifier
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Restaurant correctly deleted
+        400:
+          description: Can't delete restaurant
+          content: {}
 
-  /restaurants/get_all:
+  /restaurants/all:
     get:
       tags:
       - Restaurants
@@ -190,62 +304,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /restaurants/add/{id_op}:
-    post:
-      tags:
-      - Restaurants
-      summary: Creates a restaurant linked to the operator specified by id_op
-      operationId: restaurants.resources.restaurants.post_add
-      requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  name:
-                    type: string
-                  address:
-                    type: string
-                  city:
-                    type: string
-                  phone:
-                    type: string
-                  menu_type:
-                    type: string
-                required:
-                  - name
-                  - address
-                  - city
-                  - phone
-                  - menu_type
-      parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      responses:
-        200:
-          description: Restaurant successfully added
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-        400:
-          description: Error in the data validation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-        500:
-          description: Error in saving the restaurant in the db
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-  
+  # TODO kill
   /restaurants/details/{id_op}:
      get:
       tags:
@@ -309,20 +368,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /restaurants/add_tables/{id_op}/{rest_id}:
+  /restaurants/tables/{restaurant_id}:
     post:
       tags:
         - Restaurants
       summary: Adds tables to the restaurants 
       operationId: restaurants.resources.restaurants.add_tables
       parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      - name: rest_id
+      - name: restaurant_id
         in: path
         description: Restaurant's unique identifier
         required: true
@@ -362,20 +415,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
   
-  /restaurants/add_time/{id_op}/{rest_id}:
+  /restaurants/time/{restaurant_id}:
     post:
       tags:
         - Restaurants
-      summary: Adds availabilties to the restaurant specified by the rest_id
+      summary: Adds availabilties to the restaurant specified by the restaurant_id
       operationId: restaurants.resources.restaurants.add_time
       parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      - name: rest_id
+      - name: restaurant_id
         in: path
         description: Restaurant's unique identifier
         required: true
@@ -412,20 +459,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
   
-  /restaurants/add_measure/{id_op}/{rest_id}:
+  /restaurants/measure/{restaurant_id}:
     put:
       tags:
         - Restaurants
-      summary: Adds security measures to the restaurant specified by the rest_id
+      summary: Adds security measures to the restaurant specified by the restaurant_id
       operationId: restaurants.resources.restaurants.add_measure
       parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      - name: rest_id
+      - name: restaurant_id
         in: path
         description: Restaurant's unique identifier
         required: true
@@ -456,20 +497,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /restaurants/add_avg_stay/{id_op}/{rest_id}:
+  /restaurants/avg_stay/{restaurant_id}:
     put:
       tags:
         - Restaurants
-      summary: Adds average stay time to the restaurant specified by the rest_id
+      summary: Adds average stay time to the restaurant specified by the restaurant_id
       operationId: restaurants.resources.restaurants.add_avg_stay
       parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      - name: rest_id
+      - name: restaurant_id
         in: path
         description: Restaurant's unique identifier
         required: true
@@ -503,67 +538,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
           
-  /edit_restaurant/{id_op}/{rest_id}:
-    put:
-      tags:
-        - Restaurants
-      summary: Edits the restaurant specified by the rest_id  
-      operationId: restaurants.resources.restaurants.put_edit_restaurant
-      parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      - name: rest_id
-        in: path
-        description: Restaurant's unique identifier
-        required: true
-        schema:
-          type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                name:
-                  type: string
-                address:
-                  type: string
-                city:
-                  type: string
-                phone:
-                  type: string
-                menu_type:
-                  type: string
-              required:
-                - name
-                - address
-                - city
-                - phone
-                - menu_type
-      responses:
-        200:
-          description: Restaurant correctly modified
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-        400:
-          description: Can't modify restaurant
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-
   /restaurants/review:
     post:
       tags:
         - Restaurants
-      summary: Edits the restaurant specified by the rest_id  
+      summary: Creates a new review for the restaurant
       operationId: restaurants.resources.restaurants.add_review
       requestBody:
         required: true
@@ -664,32 +643,6 @@ paths:
                     type: string
                   message:
                     type: string
-  
-  /restaurants/delete/{id_op}/{rest_id}:
-    delete:
-      tags:
-        - Restaurants
-      summary: Edits the restaurant specified by the rest_id  
-      operationId: restaurants.resources.restaurants.delete_restaurant
-      parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      - name: rest_id
-        in: path
-        description: Restaurant's unique identifier
-        required: true
-        schema:
-          type: integer
-      responses:
-        200:
-          description: Restaurant correctly deleted
-        400:
-          description: Can't delete restaurant
-          content: {}
 
 components:
   schemas:
@@ -704,6 +657,10 @@ components:
       - lon
       - phone
       - owner_id
+      - tables
+      - availabilities
+      - ratings
+      - likes
       type: object
       properties:
         id:
@@ -747,6 +704,27 @@ components:
           type: integer
           description: Unique owner identifier
           example: 123
+        tables:
+          type: array
+          item:
+            type:
+              $ref: '#/components/schemas/Table'
+        availabilities:
+          type: array
+          item:
+            type:
+              $ref: '#/components/schemas/RestaurantAvailability'
+        rating:
+          type: array
+          item:
+            type:
+              $ref: '#/components/schemas/RestaurantRating'
+        likes:
+          type:
+          item:
+            type:
+              $ref: '#/components/schemas/RestaurantLike'
+
     
     Table:
       description: The restaurant's table model
