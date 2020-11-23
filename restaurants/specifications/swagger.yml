@@ -8,7 +8,7 @@ servers:
 
 paths:
   
-  /restaurants:
+  /restaurant:
     post:
       tags:
       - Restaurants
@@ -60,7 +60,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
   
-  /restaurants/{restaurant_id}:
+  /restaurant/{restaurant_id}:
     get:
       tags:
       - Restaurants
@@ -117,7 +117,7 @@ paths:
     put:
       tags:
         - Restaurants
-      summary: Edits the restaurant specified by the restaurant_id  
+      summary: Edits the restaurant specified by the restaurant_id
       operationId: restaurants.resources.restaurants.put_edit_restaurant
       parameters:
       - name: restaurant_id
@@ -177,11 +177,73 @@ paths:
       responses:
         200:
           description: Restaurant correctly deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
         400:
           description: Can't delete restaurant
-          content: {}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
 
-  /restaurants/all:
+  /restaurant/by_operator_id/{op_id}:
+    get:
+      tags:
+      - Restaurants
+      summary: Get a single restaurant
+      operationId: restaurants.resources.restaurants.get_by_op_id
+      parameters:
+      - name: op_id
+        in: path
+        description: Operator's unique identifier
+        required: true
+        schema:
+          type: integer
+      responses:
+        200:
+          description: Return restaurant
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - status
+                  - message
+                  - restaurant_sheet
+                properties:
+                  restaurant_sheet:
+                    type: object
+                    required:
+                      - restaurant
+                      - average_rate
+                      - max_rate
+                      - is_open
+                    properties:
+                      restaurant:
+                        $ref: '#/components/schemas/Restaurant'
+                      average_rate:
+                        description: Average rate of the restaurant
+                        type: number
+                      max_rate:
+                        description: Max rating of the restaurant
+                        type: integer
+                      is_open:
+                        description: The restaurant is open or not
+                        type: boolean
+                  status:
+                    type: string
+                  message:
+                    type: string
+        400:
+          description: Restaurant_id is not linked to any restaurant
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+
+  /restaurant/all:
     get:
       tags:
       - Restaurants
@@ -214,7 +276,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /restaurants/search_by/{search_filter}/{search_field}:
+  /restaurant/search_by/{search_filter}/{search_field}:
     get:
       tags:
       - Restaurants
@@ -260,7 +322,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /restaurants/like/{restaurant_id}:
+  /restaurant/like/{restaurant_id}:
     put:
       tags:
       - Restaurants
@@ -304,71 +366,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  # TODO kill
-  /restaurants/details/{id_op}:
-     get:
-      tags:
-        - Restaurants
-      summary: Show the information needed to properly render the restaurant details page
-      operationId: restaurants.resources.restaurants.details
-      parameters:
-      - name: id_op
-        in: path
-        description: Operator's Unique identifier
-        required: true
-        schema:
-          type: integer
-      responses:
-        200:
-          description: Returns all the restaurant information
-          content:
-            application/json:
-              schema:
-                type: object
-                required:
-                  - status
-                  - message
-                  - details
-                properties:
-                  status:
-                    type: string
-                  message:
-                    type: string
-                  details:
-                    type: object
-                    required:
-                      - restaurant
-                      - tables
-                      - times
-                      - avg_stay
-                      - list_measures
-                    properties:
-                      restaurant:
-                        $ref: '#/components/schemas/Restaurant'
-                      tables:
-                        description: List of the restaurant's tables
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/Table'
-                      times:
-                        description: The restaurant opening hours
-                        type: array
-                        items:
-                          $ref: '#/components/schemas/RestaurantAvailability'
-                      avg_stay:
-                        description: The restaurant average stay time
-                        type: string
-                      list_measures:
-                        description: String list of the security measures adopted by the restaurant
-                        type: string
-        404:
-          description: The operator has no restaurant
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Response'
-
-  /restaurants/tables/{restaurant_id}:
+  /restaurant/tables/{restaurant_id}:
     post:
       tags:
         - Restaurants
@@ -415,7 +413,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
   
-  /restaurants/time/{restaurant_id}:
+  /restaurant/time/{restaurant_id}:
     post:
       tags:
         - Restaurants
@@ -459,7 +457,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
   
-  /restaurants/measure/{restaurant_id}:
+  /restaurant/measure/{restaurant_id}:
     put:
       tags:
         - Restaurants
@@ -497,7 +495,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /restaurants/avg_stay/{restaurant_id}:
+  /restaurant/avg_stay/{restaurant_id}:
     put:
       tags:
         - Restaurants
@@ -538,7 +536,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
           
-  /restaurants/review:
+  /restaurant/review:
     post:
       tags:
         - Restaurants
@@ -609,7 +607,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Response'
 
-  /restaurants/rating_bounds:
+  /restaurant/rating_bounds:
     get:
       tags:
       - Restaurants
@@ -646,6 +644,7 @@ paths:
 
 components:
   schemas:
+
     Restaurant:
       description: The restaurant model
       required:
@@ -706,25 +705,20 @@ components:
           example: 123
         tables:
           type: array
-          item:
-            type:
-              $ref: '#/components/schemas/Table'
+          items:
+            $ref: '#/components/schemas/Table'
         availabilities:
           type: array
-          item:
-            type:
-              $ref: '#/components/schemas/RestaurantAvailability'
-        rating:
+          items:
+            $ref: '#/components/schemas/RestaurantAvailability'
+        ratings:
           type: array
-          item:
-            type:
-              $ref: '#/components/schemas/RestaurantRating'
+          items:
+            $ref: '#/components/schemas/RestaurantRating'
         likes:
-          type:
-          item:
-            type:
-              $ref: '#/components/schemas/RestaurantLike'
-
+          type: array
+          items:
+            $ref: '#/components/schemas/RestaurantLike'
     
     Table:
       description: The restaurant's table model
@@ -768,11 +762,11 @@ components:
         start_time:
           type: string
           description: The opening time start time (hour)
-          example: "09:00" # TODO: check if this includes seconds
+          example: "09:00"
         end_time:
           type: string
           description: The opening time end time (hour)
-          example: "12:00" # TODO: check if this includes seconds
+          example: "12:00"
         day:
           type: string
           description: The opening time week day
@@ -783,6 +777,64 @@ components:
           description: Restaurant's Unique Identifier
           example: 123
 
+    RestaurantRating:
+      description: The restaurant rating
+      required:
+        - customer_id
+        - restaurant_id
+        - value
+        - review
+        - timestamp
+      type: object
+      properties:
+        customer_id:
+          type: integer
+          description: Customer unique identifier
+          readOnly: true
+          example: 123
+        restaurant_id:
+          type: integer
+          description: Restaurant's Unique Identifier
+          readOnly: true
+          example: 123
+        customer_name:
+          type: string
+          description: Customer name
+          example: 'Musca'
+        value:
+          type: integer
+          description: Value of the rating
+          minimum: 0
+          maximum: 10
+          example: 6
+        review:
+          type: string
+          description: Text of the review
+          example: "Very good!"
+        timestamp:
+          type: string
+          description: Timestamp of the like creation   
+
+    RestaurantLike:
+      description: The restaurant like
+      type: object
+      required:
+        - liker_id
+        - restaurant_id
+        - timestamp
+      properties:
+        liker_id:
+          type: integer
+          description: Unique identifier of the customer 
+          example: 123
+        restaurant_id:
+          type: integer
+          description: Unique identifier of the restaurant
+          example: 123
+        timestamp:
+          type: string
+          description: Timestamp of the like creation      
+    
     Response:
       description: Standard json response template
       type: object

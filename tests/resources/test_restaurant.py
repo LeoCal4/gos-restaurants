@@ -25,15 +25,25 @@ class RestaurantResTest(ResourceTest):
 
     def test_restaurant_sheet_400(self):
     #Test unsuccessful response, the restaurant doens't exists
-        response = self.client.get('/restaurants/' + str(0))
+        response = self.client.get('/restaurant/' + str(0))
         assert response.status_code == 400
 
     def test_restaurant_sheet_200(self):
     #Test successful response
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
-        response = self.client.get('/restaurants/' + str(restaurant.id))
+        response = self.client.get('/restaurant/' + str(restaurant.id))
         assert response.status_code == 200
+
+    def test_get_by_op_id_200(self):
+        _, op_id, _ = self.add_restaurant()
+        response = self.client.get('/restaurant/by_operator_id/' + str(op_id))
+        assert response.status_code == 200
+
+    def test_get_by_op_id_400(self):
+        #Test unsuccessful response, the restaurant doesn't exists
+        response = self.client.get('/restaurant/by_operator_id/' + str(0))
+        assert response.status_code == 400
 
     def test_get_all_restaurant_200(self):
     #Test successful response
@@ -42,23 +52,17 @@ class RestaurantResTest(ResourceTest):
             restaurant, _ = self.test_restaurant.generate_random_restaurant()
             self.restaurant_manager.create_restaurant(restaurant)
             restaurants.append(restaurant)
-        response = self.client.get('/restaurants/get_all')
+        response = self.client.get('/restaurant/all')
         assert response.status_code == 200
-
-    # def test_get_all_restaurant_500(self):
-    # #Test DB error response
-    #     response = self.client.get('/restaurants/get_all')
-    #     assert response.status_code == 500
     
     def test_search_by_200(self):
-    #Test successful response
-        restaurants = []
-        for _ in range(randint(2, 10)):
-            restaurant, _ = self.test_restaurant.generate_random_restaurant()
-            self.restaurant_manager.create_restaurant(restaurant)
-            restaurants.append(restaurant)
-        search_filter = choice(['Menu Type', 'City', 'Name'])
-        response = self.client.get('/restaurants/search_by/%s/%s' % (search_filter, self.faker.first_name()))
+        #Test successful response
+        search_field = choice(['Menu Type', 'City', 'Name'])
+        restaurant, _ = self.test_restaurant.generate_random_restaurant()
+        restaurant.menu_type = search_field
+        name = restaurant.name
+        self.restaurant_manager.create_restaurant(restaurant)
+        response = self.client.get('/restaurant/search_by/%s/%s' % (name, search_field))
         assert response.status_code == 200
 
     def test_like_toggle_400(self):
@@ -66,7 +70,7 @@ class RestaurantResTest(ResourceTest):
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         data = {}
-        response = self.client.post('/restaurants/like/' + str(restaurant.id), json=data)
+        response = self.client.put('/restaurant/like/' + str(restaurant.id), json=data)
         assert response.status_code == 400
 
     def test_like_toggle_200(self):
@@ -74,150 +78,133 @@ class RestaurantResTest(ResourceTest):
         restaurant, _ = self.test_restaurant.generate_random_restaurant()
         self.restaurant_manager.create_restaurant(restaurant)
         data = {'user_id': 1 }
-        response = self.client.post('/restaurants/like/' + str(restaurant.id), json=data)
+        response = self.client.put('/restaurant/like/' + str(restaurant.id), json=data)
         assert response.status_code == 200
 
     def test_like_toggle_500(self):
     #Test DB error response
         data = {'user_id': 2 }
-        response = self.client.post('/restaurants/like/' + str(0), json=data)
+        response = self.client.put('/restaurant/like/' + str(0), json=data)
         assert response.status_code == 500
 
     def test_post_add_400(self):
     #Test wrong input data
         data = {}
-        id_operator = self.faker.random_int(min=1)
-        response = self.client.post('/restaurants/add/' + str(id_operator), json=data)
+        response = self.client.post('/restaurant', json=data)
         assert response.status_code == 400
 
     def test_post_add_200(self):
     #Test successful adding new restaurant
-        restaurant, _ = self.test_restaurant.generate_random_restaurant()
-        self.restaurant_manager.create_restaurant(restaurant)       
+        restaurant, _, _ = self.add_restaurant()
         data = {'name': restaurant.name,
                 'address': restaurant.address,
                 'city':  restaurant.city,
                 'phone': restaurant.phone,
-                'menu_type': restaurant.menu_type}
-        id_operator = self.faker.random_int(min=0, max=50000)
-        response = self.client.post('/restaurants/add/' + str(id_operator), json=data)
+                'menu_type': restaurant.menu_type,
+                'op_id': restaurant.owner_id}
+        response = self.client.post('/restaurant', json=data)
         assert response.status_code == 200
-
-    def test_details_200(self):
-    #Test successful retrive
-        _, id_operator, data = self.add_restaurant()
-        self.client.post('/restaurants/add/' + str(id_operator), json=data)
-        response = self.client.get('/restaurants/details/' + str(id_operator))
-        assert response.status_code == 200
-
-    def test_details_400(self):
-    #Test the restaurant doesn't exists
-        response = self.client.get('/restaurants/details/' + str(0))
-        assert response.status_code == 400
 
     def test_add_tables_200(self):
-        restaurant, id_operator, _ = self.add_restaurant()
+        restaurant, _, _ = self.add_restaurant()
         data = {'number': self.faker.random_int(min=1, max=10),
                 'max_capacity': self.faker.random_int(min=1, max=10)}
-        response = self.client.post('/restaurants/add_tables/'+ str(id_operator) + '/' + str(restaurant.id), json=data)
+        response = self.client.post('/restaurant/tables/'+ str(restaurant.id), json=data)
         assert response.status_code == 200
 
     def test_add_tables_400(self):
-        response = self.client.post('/restaurants/add_tables/'+ str(0) + '/' + str(0), json={})
+        response = self.client.post('/restaurant/tables/' + str(0), json={})
         assert response.status_code == 400
 
     def test_add_times_200(self):
-        restaurant, id_operator, _ = self.add_restaurant()
+        restaurant, _, _ = self.add_restaurant()
         start_time = time(hour=self.faker.random_int(min=0, max=12), minute=self.faker.random_int(min=0, max=59))
         end_time = time(hour=self.faker.random_int(min=13, max=23), minute=self.faker.random_int(min=0, max=59))
         data = {'day': 'Monday',
                 'start_time': start_time.strftime('%H:%M:%S'),
                 'end_time': end_time.strftime('%H:%M:%S')}
-        response = self.client.post('/restaurants/add_time/'+ str(id_operator) + '/' + str(restaurant.id), json=data)
+        response = self.client.post('/restaurant/time/' + str(restaurant.id), json=data)
         assert response.status_code == 200
 
     def test_add_times_400(self):
-        response = self.client.post('/restaurants/add_time/'+ str(0) + '/' + str(0), json={})
+        response = self.client.post('/restaurant/time/' + str(0), json={})
         assert response.status_code == 400
-        restaurant, id_operator, _ = self.add_restaurant()
-        response = self.client.post('/restaurants/add_time/'+ str(id_operator) + '/' + str(restaurant.id), json={})
+        restaurant, _, _ = self.add_restaurant()
+        response = self.client.post('/restaurant/time/' + str(restaurant.id), json={})
         assert response.status_code == 400   
 
     def test_add_measure_200(self):
         list_measure = ["Hand sanitizer", "Plexiglass", "Spaced tables",
                     "Sanitized rooms", "Temperature scanners"]        
-        restaurant, id_operator, _ = self.add_restaurant()
+        restaurant, _, _ = self.add_restaurant()
         test_measure = list_measure[self.faker.random_int(min=0, max=4)]
         data = {'measure' : test_measure}
-        response = self.client.post('/restaurants/add_measure/'+ str(id_operator) + '/' + str(restaurant.id), json=data)
+        response = self.client.put('/restaurant/measure/' + str(restaurant.id), json=data)
         assert response.status_code == 200
 
     def test_add_measure_400(self):
-        response = self.client.post('/restaurants/add_measure/' + str(0) + '/' + str(0), json={})
+        response = self.client.put('/restaurant/measure/' + str(0), json={})
         assert response.status_code == 400
-        restaurant, id_operator, _ = self.add_restaurant()
-        response = self.client.post('/restaurants/add_measure/'+ str(id_operator) + '/' + str(restaurant.id), json={})
+        restaurant, _, _ = self.add_restaurant()
+        response = self.client.put('/restaurant/measure/' + str(restaurant.id), json={})
         assert response.status_code == 400
-        json_response = response.json
 
     def test_add_avg_stay_200(self):      
-        restaurant, id_operator, _ = self.add_restaurant()
+        restaurant, _, _ = self.add_restaurant()
         hours = self.faker.random_int(min=0, max=23)
         minutes = self.faker.random_int(min=1, max=59)
         data = {'hours' : hours,
                 'minutes': minutes}
-        response = self.client.post('/restaurants/add_avg_stay/'+ str(id_operator) + '/' + str(restaurant.id), json=data)
-        json_response = response.json
+        response = self.client.put('/restaurant/avg_stay/' + str(restaurant.id), json=data)
         assert response.status_code == 200
 
     def test_add_avg_stay_400(self):
-        response = self.client.post('/restaurants/add_avg_stay/' + str(0) + '/' + str(0), json={})
+        response = self.client.put('/restaurant/avg_stay/' + str(0), json={})
         assert response.status_code == 400
-        restaurant, id_operator, _ = self.add_restaurant()
-        response = self.client.post('/restaurants/add_avg_stay/'+ str(id_operator) + '/' + str(restaurant.id), json={})
+        restaurant, _, _ = self.add_restaurant()
+        response = self.client.put('/restaurant/avg_stay/' + str(restaurant.id), json={})
         assert response.status_code == 400
-        json_response = response.json
 
     def test_post_edit_restaurant_400(self):
-        response = self.client.post('edit_restaurant/' + str(0) + '/' + str(0), json={})
+        response = self.client.put('restaurant/' + str(0), json={})
         assert response.status_code == 400
-        restaurant, id_operator, _ = self.add_restaurant()
-        response = self.client.post('edit_restaurant/'+ str(id_operator) + '/' + str(restaurant.id), json={})
+        restaurant, _, _ = self.add_restaurant()
+        response = self.client.put('restaurant/' + str(restaurant.id), json={})
         assert response.status_code == 400
-        json_response = response.json
 
     def test_post_edit_restaurant_200(self):
-        restaurant, id_operator, data = self.add_restaurant()
-        response = self.client.post('edit_restaurant/'+ str(id_operator) + '/' + str(restaurant.id), json=data)
-        json_response = response.json
+        restaurant, _, data = self.add_restaurant()
+        response = self.client.put('restaurant/' + str(restaurant.id), json=data)
         assert response.status_code == 200
 
     def test_delete_restaurant_400(self):
-        response = self.client.delete('restaurants/delete/' + str(0) + '/' + str(0))
+        response = self.client.delete('restaurant/' + str(0))
         assert response.status_code == 400
 
     def test_delete_restaurant_200(self):
-        restaurant, id_operator, _ = self.add_restaurant()
-        response = self.client.delete('restaurants/delete/' + str(id_operator) + '/' + str(restaurant.id))
+        restaurant, _, _ = self.add_restaurant()
+        response = self.client.delete('restaurant/' + str(restaurant.id))
         restaurant = self.restaurant_manager.retrieve_by_id(restaurant.id)
         self.assertIsNone(restaurant)
         assert response.status_code == 200
     
     def test_add_review_200(self):
         restaurant, _, _ = self.add_restaurant()
+        restaurant_id = restaurant.id
         review, _ = self.test_restaurant_rating.generate_random_rating(restaurant=restaurant)
         review = review.serialize()
-        response = self.client.post('restaurants/review', json=review)
+        response = self.client.post('restaurant/review', json=review)
+        restaurant = self.restaurant_manager.retrieve_by_id(restaurant_id)
         review, _ = self.test_restaurant_rating.generate_random_rating(restaurant=restaurant, customer_id=review['customer_id'])
         review = review.serialize()
-        response = self.client.post('restaurants/review', json=review)
+        response = self.client.post('restaurant/review', json=review)
         assert response.status_code == 200
 
     def test_add_review_201(self):
         restaurant, _, _ = self.add_restaurant()
         review, _ = self.test_restaurant_rating.generate_random_rating(restaurant=restaurant)
         review = review.serialize()
-        response = self.client.post('restaurants/review', json=review)
+        response = self.client.post('restaurant/review', json=review)
         assert response.status_code == 201
 
     def test_add_review_400(self):
@@ -225,11 +212,11 @@ class RestaurantResTest(ResourceTest):
         review, _ = self.test_restaurant_rating.generate_random_rating(restaurant=restaurant)
         review = review.serialize()
         del review['value']
-        response = self.client.post('restaurants/review', json=review)
+        response = self.client.post('restaurant/review', json=review)
         assert response.status_code == 400
 
     def test_get_rating_bounds_200(self):
-        response = self.client.get('restaurants/rating_bounds')
+        response = self.client.get('restaurant/rating_bounds')
         assert response.status_code == 200
         
     #Tests on Helper Methods

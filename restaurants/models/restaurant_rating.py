@@ -18,6 +18,12 @@ class RestaurantRating(db.Model):
         primary_key=True
     )
 
+    customer_name = db.Column(
+        db.String(
+            length=REVIEW_MAX_LENGTH,
+        )
+    )
+
     restaurant_id = db.Column(
         db.Integer,
         db.ForeignKey('Restaurant.id'),
