@@ -1,6 +1,7 @@
 from restaurants.models.restaurant import Restaurant
 from sqlalchemy import func
 from .manager import Manager
+from restaurants.comm.manager import EventManager
 
 
 class RestaurantManager(Manager):
@@ -44,6 +45,8 @@ class RestaurantManager(Manager):
 
     @staticmethod
     def delete_restaurant(restaurant: Restaurant):
+        # sending event
+        EventManager.restaurant_deleted(restaurant_id=restaurant.id)
         Manager.delete(restaurant=restaurant)
 
     @staticmethod
