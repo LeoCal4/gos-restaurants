@@ -50,3 +50,8 @@ class RestaurantManager(Manager):
     def delete_restaurant_by_id(id_: int):
         restaurant = RestaurantManager.retrieve_by_id(id_)
         RestaurantManager.delete_restaurant(restaurant)
+
+    @staticmethod
+    def delete_restaurant_by_operator_id(op_id: int):
+        restaurant = RestaurantManager.retrieve_by_operator_id(id_)
+        RestaurantManager.delete_restaurant(restaurant)

@@ -19,7 +19,7 @@ def start_workers():
 
     for worker in worker_list:
         with Connection(app.config['RABMQ_RABBITMQ_URL'], heartbeat=4) as conn:
-            worker = worker(conn)
+            worker = worker(conn, logging)
             thread = threading.Thread(target=worker.run)
             thread.start()
             logging.info("Started new worker thread %s" % worker)

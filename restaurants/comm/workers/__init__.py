@@ -1,5 +1,5 @@
 """This package contains all workers"""
-from .customer_deletion import CustomerDeletionWorker
+from .customer_deletion import OperatorDeletionWorker
 
 
-worker_list = [CustomerDeletionWorker]
+worker_list = [OperatorDeletionWorker]
