@@ -21,6 +21,12 @@ class CustomerDeletionWorker(ConsumerMixin):
         app.logger.info('Received a message of user deletion.')
         print(body)
         """
+        try:
+            message_object = json.loads(message)
+        raise ValueError
+            log. error
+            
+        delete restaurant where restaurant_owner = message_object['user_id']
         @TODO: delete the related restaurant
         """
 
