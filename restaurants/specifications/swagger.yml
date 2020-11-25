@@ -46,7 +46,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Response'
+                type: object
+                required:
+                  - status
+                  - message
+                  - restaurant_id
+                properties:
+                  restaurant_id:
+                    type: integer
+                  status:
+                    type: string
+                  message:
+                    type: string
+
         400:
           description: Error in the data validation
           content:

@@ -181,7 +181,8 @@ def post_add():
                         'message': 'Error in saving the restaurant in the db.\n' + str(e)
                         }), 500
     return jsonify({'status': 'Success',
-                    'message': 'Restaurant succesfully added'
+                    'message': 'Restaurant succesfully added',
+                    'restaurant_id': restaurant.id
                     }), 200
 
 
